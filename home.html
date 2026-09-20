@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OXI E-Sports - User Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #090714;
+            --card-bg: #130f26;
+            --card-border: rgba(139, 0, 255, 0.35);
+            --neon-purple: #8b00ff;
+            --neon-pink: #ff007f;
+            --neon-cyan: #00ffd2;
+            --text-main: #ffffff;
+            --text-sub: #a099c0;
+            --glow: 0 0 15px rgba(139, 0, 255, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; user-select: none; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 80px; min-height: 100vh; overflow-x: hidden; }
+
+        header {
+            background: rgba(19, 15, 38, 0.95);
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--card-border);
+        }
+        .logo-box { display: flex; align-items: center; gap: 8px; }
+        .logo-box h2 { font-family: 'Orbitron'; font-size: 18px; font-weight: 900; color: #fff; }
+
+        .wallet-pill {
+            background: linear-gradient(135deg, rgba(139,0,255,0.25), rgba(255,0,127,0.25));
+            border: 1px solid var(--neon-purple);
+            padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: #fff;
+            display: flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+
+        .notice-bar {
+            background: linear-gradient(90deg, #6000c8, #8b00ff, #6000c8);
+            color: #fff; padding: 6px 15px; font-size: 12px; font-weight: 600; overflow: hidden; white-space: nowrap;
+        }
+        .notice-content { display: inline-block; animation: marquee 22s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 15px; }
+
+        .banner-wrapper { margin-bottom: 25px; border-radius: 16px; overflow: hidden; border: 1px solid var(--card-border); position: relative; background: #000; }
+        .banner-track { display: flex; transition: 0.5s; }
+        .banner-slide { min-width: 100%; cursor: pointer; }
+        .banner-slide img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
+
+        .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        @media(min-width: 600px){ .category-grid { grid-template-columns: repeat(3, 1fr); } }
+        .category-card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--card-border); overflow: hidden; cursor: pointer; transition: 0.3s; }
+        .category-img-box { width: 100%; aspect-ratio: 1/1; background: #000; }
+        .category-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .category-title { padding: 10px; text-align: center; font-weight: 700; font-size: 13px; color: #fff; background: rgba(0,0,0,0.4); }
+
+        .match-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 15px; margin-bottom: 15px; }
+        .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .match-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-bottom: 12px; text-align: center; }
+        .info-label { font-size: 10px; color: var(--text-sub); }
+        .info-val { font-size: 12px; font-weight: 700; color: #fff; }
+        .join-btn { width: 100%; background: linear-gradient(90deg, #8b00ff, #ff007f); color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+        .room-box { background: rgba(139, 0, 255, 0.15); border: 1px dashed var(--neon-purple); padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; }
+
+        .screen-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); color: #fff; z-index: 1500; display: none; flex-direction: column; overflow-y: auto; }
+        .screen-header { background: var(--card-bg); padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--card-border); position: sticky; top: 0; z-index: 10; }
+        .screen-header h2 { font-family: 'Orbitron'; font-size: 16px; font-weight: 700; color: #fff; }
+        .back-icon { font-size: 18px; cursor: pointer; color: var(--neon-cyan); }
+
+        .profile-top-card { background: linear-gradient(135deg, rgba(139,0,255,0.25), rgba(255,0,127,0.15)); border: 1px solid var(--card-border); border-radius: 20px; padding: 25px 20px; text-align: center; margin-bottom: 20px; }
+        .prof-avatar { width: 75px; height: 75px; border-radius: 50%; background: var(--neon-purple); border: 3px solid #fff; margin: 0 auto 10px; font-size: 32px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+        .prof-stats-bar { display: flex; justify-content: space-around; align-items: center; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+
+        .menu-card-list { background: var(--card-bg); border-radius: 18px; border: 1px solid var(--card-border); overflow: hidden; margin-bottom: 25px; }
+        .menu-item-row { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; }
+        .menu-item-row i { width: 35px; font-size: 18px; color: var(--neon-cyan); }
+        .menu-item-row span { flex: 1; font-size: 14px; font-weight: 600; color: #fff; }
+
+        .btn-neon-logout { width: 100%; background: linear-gradient(90deg, #ff0055, #ff007f); color: #fff; border: none; padding: 14px; border-radius: 25px; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+        .panel-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .bal-row-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .styled-input-box { width: 100%; padding: 13px 15px; border-radius: 10px; border: 1px solid var(--card-border); background: #0a081a; color: #fff; font-size: 14px; outline: none; margin-bottom: 15px; }
+
+        .method-grid-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .method-card { background: #0a081a; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; }
+        .method-card.active { border-color: var(--neon-cyan); background: rgba(0, 255, 210, 0.1); }
+
+        .btn-cyan-action { width: 100%; background: var(--neon-cyan); color: #000; border: none; padding: 14px; border-radius: 25px; font-weight: 800; font-size: 14px; cursor: pointer; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0e0a1f; border-top: 1px solid var(--card-border); display: flex; justify-content: space-around; padding: 10px 0 8px; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-sub); font-size: 11px; font-weight: 600; cursor: pointer; flex: 1; }
+        .nav-item.active { color: var(--neon-purple); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-box"><i class="fa-solid fa-gamepad"></i><h2>OXI E-SPORTS</h2></div>
+        <div class="wallet-pill" onclick="openScreen('wallet')"><i class="fa-solid fa-wallet"></i><span id="userBalanceTop">৳ 0</span></div>
+    </header>
+
+    <div class="notice-bar"><div class="notice-content">🔥 Notice: OXI E-SPORTS এ আপনাকে স্বাগতম! নিয়মিত টুর্নামেন্ট খেলুন এবং জিতে নিন আকর্ষণীয় পুরস্কার!</div></div>
+
+    <div class="container">
+        <!-- PLAY TAB -->
+        <div id="tab-play" class="tab-content">
+            <div id="categoryView">
+                <div class="banner-wrapper" id="bannerSection" style="display:none;"><div class="banner-track" id="bannerTrack"></div></div>
+                <div style="font-family:'Orbitron'; font-size:15px; font-weight:700; margin-bottom:15px; color:#fff;">MATCH CATEGORIES</div>
+                <div class="category-grid" id="categoryGrid"></div>
+            </div>
+            <div id="matchesView" style="display:none;">
+                <button class="join-btn" style="width:auto; padding:6px 16px; margin-bottom:15px; background:rgba(139,0,255,0.2);" onclick="closeMatches()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <div id="matchesList"></div>
+            </div>
+        </div>
+
+        <!-- MY MATCHES -->
+        <div id="tab-mymatches" class="tab-content" style="display:none;">
+            <h3 style="margin-bottom:15px; font-family:'Orbitron';">MY JOINED MATCHES</h3>
+            <div id="myMatchesList"></div>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="tab-results" class="tab-content" style="display:none;">
+            <h3 style="margin-bottom:15px; font-family:'Orbitron';">MATCH RESULTS</h3>
+            <div id="resultsList"><p style="text-align:center; padding:40px; color:var(--text-sub);">কোনো ফলাফল পাওয়া যায়নি।</p></div>
+        </div>
+
+        <!-- PROFILE -->
+        <div id="tab-profile" class="tab-content" style="display:none;">
+            <div class="profile-top-card">
+                <div class="prof-avatar" id="profAvatar">U</div>
+                <div id="profNameDisplay" style="font-size:18px; font-weight:700;">User Name</div>
+                <div class="prof-stats-bar">
+                    <div><div id="statPlayed" style="font-size:18px; font-weight:800;">0</div><div style="font-size:11px; color:var(--text-sub);">Match Played</div></div>
+                    <div><div id="statBal" style="font-size:22px; font-weight:900; color:var(--neon-cyan);">BDT 0</div><div style="font-size:11px; color:var(--text-sub);">Main Balance</div></div>
+                    <div><div id="statWon" style="font-size:18px; font-weight:800;">0</div><div style="font-size:11px; color:var(--text-sub);">Won</div></div>
+                </div>
+            </div>
+
+            <div class="menu-card-list">
+                <div class="menu-item-row" onclick="openScreen('wallet')"><i class="fa-solid fa-wallet"></i><span>Wallet</span></div>
+                <div class="menu-item-row" onclick="openScreen('withdraw')"><i class="fa-solid fa-money-bill-transfer"></i><span>Withdraw</span></div>
+                <div class="menu-item-row" onclick="alert('রেফার বোনাস শীঘ্রই আসছে!')"><i class="fa-solid fa-share-nodes"></i><span>Refer And Earn</span></div>
+                <div class="menu-item-row" onclick="openScreen('profile-details')"><i class="fa-solid fa-user-gear"></i><span>My Profile</span></div>
+                <div class="menu-item-row" onclick="alert('Top Players Leaderboard coming soon!')"><i class="fa-solid fa-chart-line"></i><span>Top Players</span></div>
+                <div class="menu-item-row" onclick="openScreen('dev-profile')"><i class="fa-solid fa-code"></i><span>Developer Profile</span></div>
+            </div>
+
+            <button class="btn-neon-logout" onclick="logOut()"><i class="fa-solid fa-power-off"></i> LOGOUT</button>
+        </div>
+    </div>
+
+    <!-- WALLET MODAL -->
+    <div id="screen-wallet" class="screen-modal">
+        <div class="screen-header">
+            <i class="fa-solid fa-arrow-left back-icon" onclick="closeScreen('wallet')"></i>
+            <h2>WALLET & ADD BALANCE</h2>
+        </div>
+        <div style="padding:20px;">
+            <div class="panel-box">
+                <div style="font-size:12px; color:var(--text-sub); font-weight:700;">TOTAL CASH BALANCE</div>
+                <div id="wallTotal" style="font-size:26px; font-weight:900; color:#fff; margin:5px 0 15px;">BDT 0</div>
+                <div class="bal-row-item"><span style="color:var(--text-sub); font-size:13px;">Deposit Balance</span><span id="wallDep" style="font-weight:700;">BDT 0</span></div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="join-btn" style="background:var(--neon-purple);" onclick="toggleAddMoneyBox()">+ ADD MONEY</button>
+                    <button class="join-btn" style="background:var(--neon-pink);" onclick="closeScreen('wallet'); openScreen('withdraw');">WITHDRAW</button>
+                </div>
+            </div>
+
+            <div class="panel-box" id="addMoneyFormBox" style="display:none;">
+                <h4 style="font-family:'Orbitron'; font-size:14px; margin-bottom:10px; color:var(--neon-cyan);">AUTO ADD MONEY</h4>
+                <div style="background:#0a081a; padding:12px; border-radius:10px; font-size:13px; margin-bottom:15px; border:1px solid var(--card-border);">
+                    <p id="bkashAddLine" style="margin-bottom:4px;"><strong>bKash:</strong> <span id="nBk">Loading...</span></p>
+                    <p id="nagadAddLine" style="margin-bottom:4px;"><strong>Nagad:</strong> <span id="nNg">Loading...</span></p>
+                    <p id="rocketAddLine"><strong>Rocket:</strong> <span id="nRk">Loading...</span></p>
+                </div>
+
+                <input type="text" id="trxInput" class="styled-input-box" placeholder="Enter Transaction ID (TrxID)">
+                <button class="btn-cyan-action" id="verifyTrxBtn">VERIFY TRANSACTIONS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WITHDRAW MODAL -->
+    <div id="screen-withdraw" class="screen-modal">
+        <div class="screen-header">
+            <i class="fa-solid fa-arrow-left back-icon" onclick="closeScreen('withdraw')"></i>
+            <h2>WITHDRAW BALANCE</h2>
+        </div>
+        <div style="padding:20px;">
+            <div class="panel-box" style="text-align:center;">
+                <div style="font-size:12px; color:var(--text-sub); font-weight:700;">AVAILABLE WITHDRAW BALANCE</div>
+                <div style="font-size:24px; font-weight:900; color:var(--neon-cyan); margin-top:4px;">৳ <span id="drawAvail">0</span></div>
+            </div>
+
+            <!-- DYNAMIC PAYMENT METHOD CARDS -->
+            <div class="method-grid-box">
+                <div class="method-card active" id="drawBkashCard" onclick="selMethod('bkash', this)">
+                    <i class="fa-solid fa-mobile-screen" style="font-size:24px; color:#ff007f;"></i>
+                    <div style="font-size:12px; font-weight:700; margin-top:4px;">bKash</div>
+                </div>
+                <div class="method-card" id="drawNagadCard" onclick="selMethod('nagad', this)">
+                    <i class="fa-solid fa-wallet" style="font-size:24px; color:#ff9800;"></i>
+                    <div style="font-size:12px; font-weight:700; margin-top:4px;">Nagad</div>
+                </div>
+                <div class="method-card" id="drawRocketCard" onclick="selMethod('rocket', this)">
+                    <i class="fa-solid fa-building-columns" style="font-size:24px; color:#8b00ff;"></i>
+                    <div style="font-size:12px; font-weight:700; margin-top:4px;">Rocket</div>
+                </div>
+            </div>
+
+            <input type="tel" id="drawPhone" class="styled-input-box" placeholder="Enter Account Mobile Number">
+            <input type="number" id="drawAmount" class="styled-input-box" placeholder="Amount (Minimum ৳80)">
+
+            <p style="color:#ff0055; font-size:12px; font-weight:600; text-align:center; margin-bottom:15px;">Minimum withdrawal amount is ৳80</p>
+            <button class="btn-cyan-action" onclick="processWithdraw()">SUBMIT WITHDRAWAL</button>
+        </div>
+    </div>
+
+    <!-- PROFILE DETAILS -->
+    <div id="screen-profile-details" class="screen-modal">
+        <div class="screen-header">
+            <i class="fa-solid fa-arrow-left back-icon" onclick="closeScreen('profile-details')"></i>
+            <h2>MY PROFILE SETTINGS</h2>
+        </div>
+        <div style="padding:20px;">
+            <div class="panel-box">
+                <input type="text" id="profNameInput" class="styled-input-box" placeholder="User Name">
+                <input type="text" id="profEmailInput" class="styled-input-box" disabled style="opacity:0.6;">
+                <input type="text" id="profPhoneInput" class="styled-input-box" disabled style="opacity:0.6;">
+            </div>
+            <div class="panel-box">
+                <input type="password" id="newPassInput" class="styled-input-box" placeholder="New Password">
+                <input type="password" id="confPassInput" class="styled-input-box" placeholder="Confirm Password">
+            </div>
+            <button class="btn-cyan-action" onclick="updateProfile()">UPDATE PROFILE</button>
+        </div>
+    </div>
+
+    <!-- DEVELOPER PROFILE -->
+    <div id="screen-dev-profile" class="screen-modal">
+        <div class="screen-header">
+            <i class="fa-solid fa-arrow-left back-icon" onclick="closeScreen('dev-profile')"></i>
+            <h2>DEVELOPER PROFILE</h2>
+        </div>
+        <div style="padding:30px; text-align:center;">
+            <div class="prof-avatar" style="background:var(--neon-purple); margin-bottom:15px;">R</div>
+            <h3 style="font-family:'Orbitron'; font-size:18px;">Rijuwan</h3>
+            <p style="font-size:12px; color:var(--text-sub); margin-bottom:20px;">Software Developer</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn-cyan-action" style="background:#0088cc; color:#fff;" onclick="window.open('https://t.me/Rijuwan_1','_blank')">Telegram Me</button>
+                <button class="btn-cyan-action" style="background:#25d366; color:#fff;" onclick="window.open('https://wa.me/8801604080312','_blank')">WhatsApp Me</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('play', this)"><i class="fa-solid fa-gamepad"></i><span>Play</span></div>
+        <div class="nav-item" onclick="switchTab('mymatches', this)"><i class="fa-solid fa-list-check"></i><span>My Matches</span></div>
+        <div class="nav-item" onclick="switchTab('results', this)"><i class="fa-solid fa-trophy"></i><span>Results</span></div>
+        <div class="nav-item" onclick="switchTab('profile', this)"><i class="fa-solid fa-circle-user"></i><span>Profile</span></div>
+    </nav>
+
+    <script type="module">
+        import { auth, database, onAuthStateChanged, signOut, ref, onValue, get, set, update, runTransaction, emailToKey } from './config.js';
+
+        let userKey = "";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) window.location.href = "index.html";
+            else {
+                userKey = emailToKey(user.email);
+                const banSnap = await get(ref(database, 'bannedUsers/' + userKey));
+                if (banSnap.exists()) { alert("আপনার একাউন্টটি ব্যান করা হয়েছে!"); signOut(auth); return; }
+                loadUserData();
+            }
+        });
+
+        function loadUserData() {
+            onValue(ref(database, 'users/' + userKey), (snap) => {
+                if(snap.exists()){
+                    const u = snap.val();
+                    const bal = u.balance || 0;
+                    document.getElementById('userBalanceTop').innerText = '৳ ' + bal;
+                    document.getElementById('statBal').innerText = 'BDT ' + bal;
+                    document.getElementById('wallTotal').innerText = 'BDT ' + bal;
+                    document.getElementById('wallDep').innerText = 'BDT ' + bal;
+                    document.getElementById('drawAvail').innerText = bal;
+                    
+                    const name = u.name || "User";
+                    document.getElementById('profNameDisplay').innerText = name;
+                    document.getElementById('profAvatar').innerText = name.charAt(0).toUpperCase();
+                    
+                    document.getElementById('profNameInput').value = u.name || "";
+                    document.getElementById('profEmailInput').value = u.email || "";
+                    document.getElementById('profPhoneInput').value = u.phone || "";
+                }
+            });
+
+            onValue(ref(database, 'joinedMatches/' + userKey), (s) => {
+                document.getElementById('statPlayed').innerText = s.exists() ? Object.keys(s.val()).length : 0;
+            });
+
+            loadBanners();
+            loadCategories();
+            loadPayment();
+        }
+
+        window.openScreen = (id) => document.getElementById('screen-' + id).style.display = 'flex';
+        window.closeScreen = (id) => document.getElementById('screen-' + id).style.display = 'none';
+        window.toggleAddMoneyBox = () => {
+            const box = document.getElementById('addMoneyFormBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        };
+
+        window.selMethod = (m, el) => {
+            document.querySelectorAll('.method-card').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        };
+
+        window.processWithdraw = async () => {
+            const amount = Number(document.getElementById('drawAmount').value);
+            const phone = document.getElementById('drawPhone').value.trim();
+            if(amount < 80) return alert("মিনিমাম উইথড্র ৮০ টাকা!");
+            if(!phone) return alert("মোবাইল নাম্বার দিন!");
+            
+            const uRef = ref(database, 'users/' + userKey);
+            const snap = await get(uRef);
+            if((snap.val().balance || 0) < amount) return alert("পর্যাপ্ত ব্যালেন্স নেই!");
+
+            if(confirm("উইথড্র রিকোয়েস্ট পাঠাতে চান?")){
+                await runTransaction(uRef, (u) => { if(u) u.balance -= amount; return u; });
+                alert("উইথড্র রিকোয়েস্ট পাঠানো হয়েছে!");
+                closeScreen('withdraw');
+            }
+        };
+
+        window.updateProfile = async () => {
+            const name = document.getElementById('profNameInput').value.trim();
+            const p1 = document.getElementById('newPassInput').value;
+            const p2 = document.getElementById('confPassInput').value;
+            if(p1 && p1 !== p2) return alert("পাসওয়ার্ড মেলেনি!");
+            let upData = { name };
+            if(p1) upData.password = p1;
+            await update(ref(database, 'users/' + userKey), upData);
+            alert("প্রোফাইল সেভ হয়েছে!");
+            closeScreen('profile-details');
+        };
+
+        window.logOut = () => signOut(auth);
+
+        function loadBanners() {
+            onValue(ref(database, 'banners'), (s) => {
+                const track = document.getElementById('bannerTrack'); track.innerHTML = "";
+                if(s.exists()){
+                    document.getElementById('bannerSection').style.display = 'block';
+                    Object.values(s.val()).forEach(b => {
+                        track.innerHTML += `<div class="banner-slide"><img src="${b.imageUrl}" onclick="window.open('${b.targetUrl}','_blank')"></div>`;
+                    });
+                }
+            });
+        }
+
+        function loadCategories() {
+            onValue(ref(database, 'match_categories'), (s) => {
+                const g = document.getElementById('categoryGrid'); g.innerHTML = "";
+                if(s.exists()) Object.values(s.val()).forEach(c => {
+                    g.innerHTML += `<div class="category-card" onclick="openCat('${c.title}')"><div class="category-img-box"><img src="${c.image}"></div><div class="category-title">${c.title}</div></div>`;
+                });
+            });
+        }
+
+        window.openCat = (title) => {
+            document.getElementById('categoryView').style.display = 'none';
+            document.getElementById('matchesView').style.display = 'block';
+            onValue(ref(database, 'matches/'+title), (s) => {
+                const l = document.getElementById('matchesList'); l.innerHTML = "";
+                if(s.exists()) Object.keys(s.val()).forEach(id => {
+                    const m = s.val()[id];
+                    l.innerHTML += `<div class="match-card"><div class="match-header"><b>${m.title}</b><span>${m.map}</span></div><div class="match-info-grid"><div><div class="info-label">Win</div><div class="info-val">৳${m.winPrize}</div></div><div><div class="info-label">Kill</div><div class="info-val">৳${m.perKill}</div></div><div><div class="info-label">Fee</div><div class="info-val">৳${m.entryFee}</div></div></div><button class="join-btn" onclick="joinM('${title}','${id}',${m.entryFee})">JOIN MATCH</button></div>`;
+                });
+            });
+        };
+
+        window.closeMatches = () => { document.getElementById('matchesView').style.display = 'none'; document.getElementById('categoryView').style.display = 'block'; };
+
+        window.joinM = async (cat, id, fee) => {
+            const uRef = ref(database, 'users/' + userKey);
+            const s = await get(uRef);
+            if((s.val().balance || 0) < fee) return alert("ব্যালেন্স নেই!");
+            if(confirm("জয়েন করবেন?")){
+                await runTransaction(uRef, (u) => { if(u) u.balance -= fee; return u; });
+                await set(ref(database, `joinedMatches/${userKey}/${id}`), { catTitle: cat, matchId: id });
+                alert("ম্যাচে জয়েন সম্পন্ন!");
+            }
+        };
+
+        // LOAD PAYMENT SETTINGS & DYNAMICALLY SHOW/HIDE BKASH, NAGAD, ROCKET
+        function loadPayment() {
+            onValue(ref(database, 'paymentSettings'), (s) => {
+                if(s.exists()){
+                    const data = s.val();
+
+                    // bKash Dynamic Visibility
+                    if(data.bkashActive !== false && data.bkash) {
+                        document.getElementById('bkashAddLine').style.display = 'block';
+                        document.getElementById('drawBkashCard').style.display = 'block';
+                        document.getElementById('nBk').innerText = data.bkash;
+                    } else {
+                        document.getElementById('bkashAddLine').style.display = 'none';
+                        document.getElementById('drawBkashCard').style.display = 'none';
+                    }
+
+                    // Nagad Dynamic Visibility
+                    if(data.nagadActive !== false && data.nagad) {
+                        document.getElementById('nagadAddLine').style.display = 'block';
+                        document.getElementById('drawNagadCard').style.display = 'block';
+                        document.getElementById('nNg').innerText = data.nagad;
+                    } else {
+                        document.getElementById('nagadAddLine').style.display = 'none';
+                        document.getElementById('drawNagadCard').style.display = 'none';
+                    }
+
+                    // Rocket Dynamic Visibility
+                    if(data.rocketActive !== false && data.rocket) {
+                        document.getElementById('rocketAddLine').style.display = 'block';
+                        document.getElementById('drawRocketCard').style.display = 'block';
+                        document.getElementById('nRk').innerText = data.rocket;
+                    } else {
+                        document.getElementById('rocketAddLine').style.display = 'none';
+                        document.getElementById('drawRocketCard').style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        document.getElementById('verifyTrxBtn').onclick = async () => {
+            const trx = document.getElementById('trxInput').value.trim();
+            if(!trx) return alert("TrxID দিন!");
+            const snap = await get(ref(database, 'autoTransactions/' + trx));
+            if(snap.exists() && !snap.val().used){
+                const amt = Number(snap.val().amount);
+                await runTransaction(ref(database, 'users/' + userKey), (u) => { if(u) u.balance += amt; return u; });
+                await set(ref(database, `autoTransactions/${trx}/used`), true);
+                alert(`সফলভাবে ৳${amt} যোগ হয়েছে!`);
+                closeScreen('wallet');
+            } else alert("অবৈধ অথবা ব্যবহৃত TrxID!");
+        };
+
+        window.switchTab = (t, el) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('tab-' + t).style.display = 'block';
+            el.classList.add('active');
+            if(t === 'mymatches') loadMy();
+        };
+
+        function loadMy() {
+            onValue(ref(database, 'joinedMatches/' + userKey), async (s) => {
+                const l = document.getElementById('myMatchesList'); l.innerHTML = "";
+                if(s.exists()) for(let id of Object.keys(s.val())){
+                    const m = s.val()[id];
+                    const ms = await get(ref(database, `matches/${m.catTitle}/${m.matchId}`));
+                    if(ms.exists()) l.innerHTML += `<div class="match-card"><b>${ms.val().title}</b><div class="room-box">Room ID: ${ms.val().roomId || 'অপেক্ষা করুন...'} | Password: ${ms.val().roomPassword || '---'}</div></div>`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
