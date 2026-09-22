@@ -1,4 +1,4 @@
-// User App Config
+// Firebase Configuration for User App (APK Pure Ready)
 const firebaseConfig = {
     apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
     authDomain: "oxi-esports.firebaseapp.com",
@@ -9,22 +9,39 @@ const firebaseConfig = {
     databaseURL: "https://oxi-esports-default-rtdb.firebaseio.com"
 };
 
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 const auth = firebase.auth();
 
-// ইউজার অ্যাপের জন্য লাইট থিম (সাদা) পপআপ
+// Enable Local Session Persistence for Android WebView APK
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// SweetAlert2 Light Theme Popup (User Mobile App UI)
 const SwalLight = Swal.mixin({
+    customClass: {
+        popup: 'swal-light-popup',
+        title: 'swal-light-title',
+        confirmButton: 'swal-light-confirm'
+    },
     background: '#ffffff',
-    color: '#000000',
+    color: '#1a1a1a',
     confirmButtonColor: '#b026ff',
     cancelButtonColor: '#ff4d4d'
 });
 
-function emailToKey(email) { return email ? email.replace(/\./g, ',') : ''; }
+// Utility Functions
+function emailToKey(email) {
+    return email ? email.replace(/\./g, ',') : '';
+}
 
+// User Authentication Guard for WebView
 function checkUserAuth() {
     auth.onAuthStateChanged(user => {
-        if (!user) window.location.href = "login.html";
+        if (!user) {
+            window.location.href = "login.html";
+        }
     });
 }
