@@ -1,23 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { 
-    getDatabase, 
-    ref, 
-    set, 
-    get, 
-    push, 
-    onValue, 
-    update, 
-    remove, 
-    runTransaction 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+// User App Config
 const firebaseConfig = {
     apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
     authDomain: "oxi-esports.firebaseapp.com",
@@ -28,30 +9,22 @@ const firebaseConfig = {
     databaseURL: "https://oxi-esports-default-rtdb.firebaseio.com"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
-function emailToKey(email) {
-    if (!email) return '';
-    return email.replace(/\./g, ',');
+// ইউজার অ্যাপের জন্য লাইট থিম (সাদা) পপআপ
+const SwalLight = Swal.mixin({
+    background: '#ffffff',
+    color: '#000000',
+    confirmButtonColor: '#b026ff',
+    cancelButtonColor: '#ff4d4d'
+});
+
+function emailToKey(email) { return email ? email.replace(/\./g, ',') : ''; }
+
+function checkUserAuth() {
+    auth.onAuthStateChanged(user => {
+        if (!user) window.location.href = "login.html";
+    });
 }
-
-export {
-    app,
-    auth,
-    database,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    ref,
-    set,
-    get,
-    push,
-    onValue,
-    update,
-    remove,
-    runTransaction,
-    emailToKey
-};
