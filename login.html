@@ -1,1 +1,39 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - OXI E-Sports</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: #0b061a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #160d2e; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; border: 1px solid rgba(0,255,209,0.2); text-align: center; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 12px; background: #b026ff; border: none; color: #fff; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .link { margin-top: 15px; font-size: 14px; color: #888; }
+        .link a { color: #00ffd1; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2 style="color:#00ffd1">WELCOME BACK</h2>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="login()">Login Now</button>
+        <div class="link">Don't have an account? <a href="register.html">Sign Up</a></div>
+    </div>
+    <script src="config.js"></script>
+    <script>
+        function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => window.location.href = "home.html")
+                .catch(err => SwalLight.fire('Error', err.message, 'error'));
+        }
+    </script>
+</body>
+</html>
