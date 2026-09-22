@@ -3,298 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXI E-Sports - User Authentication</title>
-    <!-- FontAwesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>OXI E-Sports - Login/Register</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+        :root {
+            --bg-color: #0b021a;
+            --card-bg: #150a2e;
+            --primary: #9d00ff;
+            --accent: #00ffcc;
+            --text: #ffffff;
+            --text-dim: #b0a3c4;
+            --error: #ff1744;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body {
-            background-color: #0b001a;
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            background-image: radial-gradient(circle at center, #1a0038 0%, #0b001a 100%);
-        }
-
-        .auth-card {
-            background: #15002b;
-            border: 2px solid #8b00ff;
-            box-shadow: 0 0 25px rgba(139, 0, 255, 0.4), inset 0 0 15px rgba(139, 0, 255, 0.2);
-            border-radius: 20px;
-            width: 100%;
-            max-width: 420px;
-            padding: 35px 25px;
-            position: relative;
+            background-color: var(--bg-color);
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; color: var(--text);
             overflow: hidden;
         }
 
-        .auth-header {
+        .auth-container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%; max-width: 400px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
             text-align: center;
-            margin-bottom: 25px;
         }
 
-        .auth-header h1 {
-            font-family: 'Teko', sans-serif;
-            font-size: 2.8rem;
-            color: #00ffd2;
-            letter-spacing: 2px;
-            text-shadow: 0 0 12px rgba(0, 255, 210, 0.6);
-            line-height: 1;
-        }
+        .auth-container h2 { color: var(--accent); margin-bottom: 25px; letter-spacing: 1px; }
 
-        .tab-buttons {
-            display: flex;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 30px;
-            padding: 4px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(139, 0, 255, 0.3);
+        .tab-switcher {
+            display: flex; background: #0b021a; border-radius: 12px;
+            padding: 5px; margin-bottom: 25px;
         }
 
         .tab-btn {
-            flex: 1;
-            padding: 10px 0;
-            border: none;
-            background: transparent;
-            color: #a0a0a0;
-            font-weight: 600;
-            font-size: 0.95rem;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            flex: 1; padding: 10px; border: none; background: none;
+            color: var(--text-dim); cursor: pointer; border-radius: 8px; font-weight: 600;
         }
 
-        .tab-btn.active {
-            background: #8b00ff;
-            color: #ffffff;
-            box-shadow: 0 0 15px rgba(139, 0, 255, 0.6);
-        }
+        .tab-btn.active { background: var(--primary); color: white; }
 
-        .form-group {
-            margin-bottom: 18px;
-            position: relative;
-        }
+        .auth-form { display: none; text-align: left; }
+        .auth-form.active { display: block; }
 
-        .form-group i.input-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #00ffd2;
-            font-size: 1.1rem;
+        .input-group { position: relative; margin-bottom: 15px; }
+        .input-group i { position: absolute; left: 15px; top: 14px; color: var(--accent); }
+        .input-group input {
+            width: 100%; padding: 12px 15px 12px 45px;
+            background: #0b021a; border: 1px solid #3d2b63;
+            border-radius: 10px; color: white; outline: none; transition: 0.3s;
         }
+        .input-group input:focus { border-color: var(--primary); }
 
-        .form-input {
-            width: 100%;
-            padding: 14px 45px 14px 45px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1.5px solid rgba(139, 0, 255, 0.4);
-            border-radius: 30px;
-            color: #ffffff;
-            font-size: 0.95rem;
-            outline: none;
-            transition: all 0.3s ease;
+        .btn-submit {
+            width: 100%; padding: 14px; background: var(--primary);
+            color: white; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            margin-top: 10px; transition: 0.3s;
         }
+        .btn-submit:hover { opacity: 0.9; }
 
-        .form-input:focus {
-            border-color: #00ffd2;
-            box-shadow: 0 0 12px rgba(0, 255, 210, 0.3);
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0a0a0;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: color 0.3s ease;
-        }
-
-        .toggle-password:hover {
-            color: #00ffd2;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #8b00ff, #5e00b3);
-            border: none;
-            border-radius: 30px;
-            color: #ffffff;
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(139, 0, 255, 0.5);
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .submit-btn:hover {
-            box-shadow: 0 0 25px rgba(0, 255, 210, 0.7);
-            transform: translateY(-2px);
-            background: linear-gradient(135deg, #9d1aff, #6c00cc);
-        }
-
-        .form-container {
-            display: none;
-        }
-
-        .form-container.active {
-            display: block;
-        }
-
-        /* Custom Gaming Popup Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-box {
-            background: #160033;
-            border: 2px solid #00ffd2;
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 380px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(0, 255, 210, 0.4);
-            transform: scale(0.8);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.active .modal-box {
-            transform: scale(1);
-        }
-
-        .modal-box i {
-            font-size: 3rem;
-            color: #00ffd2;
-            margin-bottom: 15px;
-            text-shadow: 0 0 15px rgba(0, 255, 210, 0.6);
-        }
-
-        .modal-box p {
-            font-size: 1rem;
-            color: #e0e0e0;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-
-        .modal-close-btn {
-            padding: 10px 30px;
-            background: #8b00ff;
-            border: none;
-            border-radius: 25px;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(139, 0, 255, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .modal-close-btn:hover {
-            background: #00ffd2;
-            color: #0b001a;
-            box-shadow: 0 0 20px rgba(0, 255, 210, 0.8);
-        }
+        .swal-bg { background: #150a2e !important; color: white !important; }
     </style>
 </head>
 <body>
 
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1>OXI E-SPORTS</h1>
+    <div class="auth-container">
+        <h2>OXI E-SPORTS</h2>
+        
+        <div class="tab-switcher">
+            <button class="tab-btn active" id="login-tab-btn" onclick="switchAuth('login')">Login</button>
+            <button class="tab-btn" id="register-tab-btn" onclick="switchAuth('register')">Register</button>
         </div>
 
-        <div class="tab-buttons">
-            <button class="tab-btn active" id="loginTabBtn" onclick="switchTab('login')">Login</button>
-            <button class="tab-btn" id="registerTabBtn" onclick="switchTab('register')">Register</button>
+        <!-- Login Form -->
+        <div id="login-form" class="auth-form active">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="login-email" placeholder="Email Address">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="login-pass" placeholder="Password">
+            </div>
+            <button class="btn-submit" onclick="login()">LOGIN</button>
         </div>
 
-        <!-- LOGIN FORM -->
-        <div class="form-container active" id="loginForm">
-            <div class="form-group">
-                <i class="fa-solid fa-envelope input-icon"></i>
-                <input type="email" id="loginEmail" class="form-input" placeholder="Email Address" required>
+        <!-- Register Form -->
+        <div id="register-form" class="auth-form">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="reg-name" placeholder="Full Name">
             </div>
-            <div class="form-group">
-                <i class="fa-solid fa-lock input-icon"></i>
-                <input type="password" id="loginPassword" class="form-input" placeholder="Password" required>
-                <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+            <div class="input-group">
+                <i class="fas fa-phone"></i>
+                <!-- নম্বর তুলে দিয়ে সাধারণ লেখা দেওয়া হয়েছে -->
+                <input type="tel" id="reg-phone" placeholder="Phone Number">
             </div>
-            <button type="button" class="submit-btn" onclick="handleLogin()">LOGIN</button>
-        </div>
-
-        <!-- REGISTER FORM -->
-        <div class="form-container" id="registerForm">
-            <div class="form-group">
-                <i class="fa-solid fa-user input-icon"></i>
-                <input type="text" id="regName" class="form-input" placeholder="Full Name" required>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="reg-email" placeholder="Email Address">
             </div>
-            <div class="form-group">
-                <i class="fa-solid fa-phone input-icon"></i>
-                <input type="tel" id="regPhone" class="form-input" placeholder="Phone Number (e.g. 01815400968)" required>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="reg-pass" placeholder="Password (Min 6 chars)">
             </div>
-            <div class="form-group">
-                <i class="fa-solid fa-envelope input-icon"></i>
-                <input type="email" id="regEmail" class="form-input" placeholder="Email Address" required>
-            </div>
-            <div class="form-group">
-                <i class="fa-solid fa-lock input-icon"></i>
-                <input type="password" id="regPassword" class="form-input" placeholder="Password (Min 6 chars)" required>
-                <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('regPassword', this)"></i>
-            </div>
-            <button type="button" class="submit-btn" onclick="handleRegister()">REGISTER</button>
+            <button class="btn-submit" onclick="register()">REGISTER</button>
         </div>
     </div>
-
-    <!-- CUSTOM GAMING POPUP MODAL -->
-    <div class="modal-overlay" id="customPopup">
-        <div class="modal-box">
-            <i class="fa-solid fa-shield-halved" id="popupIcon"></i>
-            <p id="popupMessage">Alert Message Here</p>
-            <button class="modal-close-btn" onclick="closePopup()">OK</button>
-        </div>
-    </div>
-
-    <!-- FIREBASE SDKs (v9 Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // Shared Firebase Configuration
+        // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
             authDomain: "oxi-esports.firebaseapp.com",
@@ -304,186 +137,54 @@
             appId: "1:924353594492:web:08329a3d1f67e7a5da35f9",
             databaseURL: "https://oxi-esports-default-rtdb.firebaseio.com"
         };
-
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Helper: Clean email for Firebase Realtime Database Key
-        function sanitizeEmail(email) {
-            return email.replace(/\./g, '_dot_').replace(/@/g, '_at_');
-        }
+        function emailToKey(email) { return email ? email.replace(/\./g, ',') : ''; }
 
-        // Custom Gaming Popup Trigger
-        function showPopup(msg, isSuccess = false) {
-            const popup = document.getElementById('customPopup');
-            const popupMsg = document.getElementById('popupMessage');
-            const popupIcon = document.getElementById('popupIcon');
+        function switchAuth(type) {
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             
-            popupMsg.innerText = msg;
-            if (isSuccess) {
-                popupIcon.className = "fa-solid fa-circle-check";
-                popupIcon.style.color = "#00ffd2";
-            } else {
-                popupIcon.className = "fa-solid fa-triangle-exclamation";
-                popupIcon.style.color = "#ff4444";
-            }
-            popup.classList.add('active');
+            document.getElementById(type + '-form').classList.add('active');
+            document.getElementById(type + '-tab-btn').classList.add('active');
         }
 
-        function closePopup() {
-            document.getElementById('customPopup').classList.remove('active');
-        }
+        function register() {
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-pass').value.trim();
 
-        // Tab Switching Logic
-        function switchTab(tab) {
-            const loginBtn = document.getElementById('loginTabBtn');
-            const regBtn = document.getElementById('registerTabBtn');
-            const loginForm = document.getElementById('loginForm');
-            const regForm = document.getElementById('registerForm');
+            if(!name || !phone || !email || !pass) return Swal.fire('Error', 'Fill all fields!', 'error');
 
-            if (tab === 'login') {
-                loginBtn.classList.add('active');
-                regBtn.classList.remove('active');
-                loginForm.classList.add('active');
-                regForm.classList.remove('active');
-            } else {
-                regBtn.classList.add('active');
-                loginBtn.classList.remove('active');
-                regForm.classList.add('active');
-                loginForm.classList.remove('active');
-            }
-        }
-
-        // Toggle Password Visibility (Eye Icon)
-        function togglePasswordVisibility(inputId, iconElement) {
-            const input = document.getElementById(inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                iconElement.classList.remove('fa-eye');
-                iconElement.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                iconElement.classList.remove('fa-eye-slash');
-                iconElement.classList.add('fa-eye');
-            }
-        }
-
-        // Parse Raw Firebase Auth Errors to Friendly Bengali Messages
-        function getFriendlyErrorMessage(error) {
-            const code = error.code || error.message || '';
-            if (code.includes('auth/email-already-in-use')) {
-                return 'এই ইমেইল দিয়ে ইতোমধ্যে অ্যাকাউন্ট তৈরি করা হয়েছে! অনুগ্রহ করে লগইন করুন।';
-            } else if (code.includes('auth/invalid-email')) {
-                return 'অনুগ্রহ করে সঠিক ইমেইল এড্রেস লিখুন।';
-            } else if (code.includes('auth/weak-password')) {
-                return 'পাসওয়ার্ড অত্যন্ত দুর্বল! অন্তত ৬ ডিজিট বা অক্ষর দিন।';
-            } else if (code.includes('auth/user-not-found') || code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
-                return 'ইমেইল অথবা পাসওয়ার্ড ভুল দিয়েছেন!';
-            } else if (code.includes('auth/network-request-failed')) {
-                return 'ইন্টারনেট কানেকশন চেক করে আবার চেষ্টা করুন।';
-            }
-            return error.message || 'একটি সমস্যা হয়েছে, আবার চেষ্টা করুন।';
-        }
-
-        // REGISTER FUNCTION
-        async function handleRegister() {
-            const name = document.getElementById('regName').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
-
-            if (!name || !phone || !email || !password) {
-                showPopup('অনুগ্রহ করে সকল ঘর সঠিকভাবে পূরণ করুন!');
-                return;
-            }
-
-            if (password.length < 6) {
-                showPopup('পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে!');
-                return;
-            }
-
-            const cleanEmail = sanitizeEmail(email);
-
-            try {
-                // Check if banned
-                const banSnap = await db.ref(`bannedUsers/${cleanEmail}`).once('value');
-                if (banSnap.exists() && banSnap.val() === true) {
-                    showPopup('আপনার অ্যাকাউন্টটি ব্যান করা হয়েছে! সাপোর্ট টিমে যোগাযোগ করুন।');
-                    return;
-                }
-
-                // Create Firebase User
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-
-                // Save Complete User Profile in Database (Unmasked Phone & Plain Password)
-                await db.ref(`users/${cleanEmail}`).set({
-                    uid: user.uid,
+            auth.createUserWithEmailAndPassword(email, pass).then(res => {
+                const key = emailToKey(email);
+                db.ref(`users/${key}`).set({
                     name: name,
-                    phone: phone, // Saved completely unmasked
+                    phone: phone,
                     email: email,
-                    password: password, // Saved for Admin Dashboard table display
-                    balance: 0,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                    wallet: 0,
+                    joined: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    window.location.href = 'home.html';
                 });
-
-                showPopup('রেজিস্ট্রেশন সফল হয়েছে! হোম পেজে নিয়ে যাওয়া হচ্ছে...', true);
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1500);
-
-            } catch (error) {
-                console.error("Registration Error:", error);
-                showPopup(getFriendlyErrorMessage(error));
-            }
+            }).catch(err => Swal.fire('Error', err.message, 'error'));
         }
 
-        // LOGIN FUNCTION
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
+        function login() {
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            if(!email || !pass) return Swal.fire('Error', 'Fill all fields!', 'error');
 
-            if (!email || !password) {
-                showPopup('ইমেইল এবং পাসওয়ার্ড প্রদান করুন!');
-                return;
-            }
-
-            const cleanEmail = sanitizeEmail(email);
-
-            try {
-                // Check if banned
-                const banSnap = await db.ref(`bannedUsers/${cleanEmail}`).once('value');
-                if (banSnap.exists() && banSnap.val() === true) {
-                    showPopup('আপনার অ্যাকাউন্টটি ব্যান করা হয়েছে! সাপোর্ট টিমে যোগাযোগ করুন।');
-                    return;
-                }
-
-                await auth.signInWithEmailAndPassword(email, password);
-                showPopup('লগইন সফল হয়েছে!', true);
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1200);
-
-            } catch (error) {
-                console.error("Login Error:", error);
-                showPopup(getFriendlyErrorMessage(error));
-            }
+            auth.signInWithEmailAndPassword(email, pass).then(res => {
+                window.location.href = 'home.html';
+            }).catch(err => Swal.fire('Error', err.message, 'error'));
         }
 
-        // Auto redirect if already logged in
-        auth.onAuthStateChanged(async (user) => {
-            if (user && user.email) {
-                const cleanEmail = sanitizeEmail(user.email);
-                const banSnap = await db.ref(`bannedUsers/${cleanEmail}`).once('value');
-                if (!banSnap.exists()) {
-                    window.location.href = 'home.html';
-                }
-            }
-        });
+        // Redirect if logged in
+        auth.onAuthStateChanged(user => { if(user) window.location.href = 'home.html'; });
     </script>
 </body>
 </html>
