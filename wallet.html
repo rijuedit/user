@@ -2,88 +2,283 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Wallet - OXI E-Sports</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- SweetAlert2 & FontAwesome & Fonts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { background: #0b061a; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
-        .balance-card { background: linear-gradient(45deg, #b026ff, #00ffd1); padding: 40px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
-        .method-card { background: #160d2e; margin: 15px; padding: 20px; border-radius: 15px; border: 1px solid rgba(0,255,209,0.2); }
-        .method-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
-        input { width: 100%; padding: 12px; margin-top: 15px; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; }
-        .add-btn { width: 100%; background: #00ffd1; color: #000; border: none; padding: 15px; margin-top: 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        :root {
+            --bg-dark: #0b061a;
+            --card-bg: #160d2e;
+            --cyan: #00ffd1;
+            --purple: #b026ff;
+            --text-light: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding-bottom: 90px; /* Space for bottom nav */
+        }
+
+        /* Top Balance Card */
+        .balance-header {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .balance-header p { font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-header h1 { font-size: 36px; font-weight: 800; margin-top: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
+        /* Main Wallet Content */
+        .wallet-container { padding: 20px; max-width: 500px; margin: 0 auto; }
+
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(0, 255, 209, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-card h3 { color: var(--cyan); font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+        .gateway-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gateway-name { font-size: 14px; color: #aaa; }
+        .gateway-number { font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; }
+        .gateway-number:active { color: var(--cyan); }
+
+        /* Form Inputs */
+        .input-group { margin-top: 20px; }
+        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 8px; }
+
+        input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--cyan); }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--cyan);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 255, 209, 0.3);
+        }
+
+        .btn-submit:active { transform: scale(0.98); }
+
+        /* Bottom Navigation Bar (এটাই আপনার মিসিং ছিল) */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #160d2e;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid rgba(0, 255, 209, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            color: #888;
+            text-decoration: none;
+            text-align: center;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--cyan);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
-    <div class="balance-card">
-        <p style="margin:0; opacity:0.8;">Current Balance</p>
-        <h1 style="margin:5px 0;">৳<span id="bal-text">0</span></h1>
+
+    <!-- Header Balance -->
+    <div class="balance-header">
+        <p>Total Balance</p>
+        <h1>৳<span id="user-wallet-bal">0</span></h1>
     </div>
 
-    <div class="method-card">
-        <h3>Deposit Money</h3>
-        <p style="font-size:12px; color:#888;">Send money to these numbers and submit TRX ID.</p>
-        <div id="gateways"></div>
-        
-        <input type="number" id="dep-amount" placeholder="Enter Amount">
-        <input type="text" id="dep-trx" placeholder="Transaction ID">
-        <select id="dep-method" class="add-btn" style="background:#160d2e; color:#fff; border:1px solid #333; margin-top:10px;">
-            <option value="bKash">bKash</option>
-            <option value="Nagad">Nagad</option>
-            <option value="Rocket">Rocket</option>
-        </select>
-        <button class="add-btn" onclick="submitDeposit()">SUBMIT REQUEST</button>
+    <div class="wallet-container">
+        <!-- Gateway Info Card -->
+        <div class="section-card">
+            <h3><i class="fas fa-university"></i> Payment Numbers</h3>
+            <p style="font-size: 11px; color: #777; margin-bottom: 10px;">Click on a number to copy it.</p>
+            <div id="gateway-list">
+                <div style="text-align:center; padding:10px; font-size:12px; color:#555;">Loading gateway numbers...</div>
+            </div>
+        </div>
+
+        <!-- Deposit Request Form -->
+        <div class="section-card">
+            <h3><i class="fas fa-plus-circle"></i> Deposit Money</h3>
+            
+            <div class="input-group">
+                <label>Select Method</label>
+                <select id="deposit-gateway">
+                    <option value="bKash">bKash Personal</option>
+                    <option value="Nagad">Nagad Personal</option>
+                    <option value="Rocket">Rocket Personal</option>
+                </select>
+
+                <label>Amount (৳)</label>
+                <input type="number" id="deposit-amount" placeholder="Minimum ৳10">
+
+                <label>Transaction ID (TRX ID)</label>
+                <input type="text" id="deposit-trx" placeholder="Enter TRX ID from SMS">
+
+                <button class="btn-submit" onclick="handleDepositRequest()">SUBMIT DEPOSIT REQUEST</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (সঠিকভাবে যুক্ত করা হয়েছে) -->
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="wallet.html" class="nav-item active">
+            <i class="fas fa-wallet"></i>
+            <span>Wallet</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
     </div>
 
     <script src="config.js"></script>
     <script>
         checkUserAuth();
-        let userKey = "";
-        let userEmail = "";
 
+        let currentUserKey = "";
+        let currentUserEmail = "";
+
+        // Wallet Balance & Gateways Listener
         auth.onAuthStateChanged(user => {
-            if(user) {
-                userEmail = user.email;
-                userKey = emailToKey(user.email);
-                db.ref('users/' + userKey).on('value', s => document.getElementById('bal-text').innerText = s.val().wallet || 0);
+            if (user) {
+                currentUserEmail = user.email;
+                currentUserKey = emailToKey(user.email);
+
+                // Fetch User Wallet
+                db.ref(`users/${currentUserKey}/wallet`).on('value', s => {
+                    document.getElementById('user-wallet-bal').innerText = s.val() || 0;
+                });
+
+                // Fetch Gateway Numbers
+                db.ref('paymentSettings').on('value', s => {
+                    const data = s.val() || {};
+                    const list = document.getElementById('gateway-list');
+                    list.innerHTML = "";
+
+                    if (data.bkashActive) list.innerHTML += renderGateway('bKash', data.bkash);
+                    if (data.nagadActive) list.innerHTML += renderGateway('Nagad', data.nagad);
+                    if (data.rocketActive) list.innerHTML += renderGateway('Rocket', data.rocket);
+                });
             }
         });
 
-        db.ref('paymentSettings').on('value', s => {
-            const d = s.val() || {};
-            const html = `
-                <div class="method-item"><span>bKash:</span> <b>${d.bkash || 'Off'}</b></div>
-                <div class="method-item"><span>Nagad:</span> <b>${d.nagad || 'Off'}</b></div>
-                <div class="method-item"><span>Rocket:</span> <b>${d.rocket || 'Off'}</b></div>
+        function renderGateway(name, num) {
+            return `
+                <div class="gateway-item">
+                    <span class="gateway-name">${name}:</span>
+                    <span class="gateway-number" onclick="copyNum('${num}')">${num} <i class="far fa-copy" style="font-size:10px; margin-left:5px;"></i></span>
+                </div>
             `;
-            document.getElementById('gateways').innerHTML = html;
-        });
+        }
 
-        function submitDeposit() {
-            const amt = document.getElementById('dep-amount').value;
-            const trx = document.getElementById('dep-trx').value;
-            const method = document.getElementById('dep-method').value;
+        function copyNum(num) {
+            navigator.clipboard.writeText(num);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Number Copied!',
+                showConfirmButton: false,
+                timer: 1500,
+                background: '#160d2e',
+                color: '#fff'
+            });
+        }
 
-            if(amt < 10 || !trx) {
-                SwalLight.fire('Error', 'Invalid details', 'error');
+        function handleDepositRequest() {
+            const amount = document.getElementById('deposit-amount').value;
+            const trxId = document.getElementById('deposit-trx').value.trim();
+            const gateway = document.getElementById('deposit-gateway').value;
+
+            if (!amount || amount < 10) {
+                SwalLight.fire('Error', 'Minimum deposit amount is ৳10.', 'error');
+                return;
+            }
+            if (!trxId) {
+                SwalLight.fire('Error', 'Please enter your Transaction ID.', 'error');
                 return;
             }
 
-            db.ref('deposit_requests').push({
-                userKey, userEmail,
-                amount: amt,
-                trxId: trx,
-                gateway: method,
+            const request = {
+                userKey: currentUserKey,
+                userEmail: currentUserEmail,
+                amount: Number(amount),
+                trxId: trxId,
+                gateway: gateway,
                 status: 'pending',
                 timestamp: Date.now()
-            }).then(() => {
-                SwalLight.fire('Success', 'Request submitted! Wait for approval.', 'success');
-                document.getElementById('dep-amount').value = "";
-                document.getElementById('dep-trx').value = "";
+            };
+
+            db.ref('deposit_requests').push(request).then(() => {
+                SwalLight.fire({
+                    title: 'Request Sent!',
+                    text: 'Admin will verify and add money soon.',
+                    icon: 'success',
+                    confirmButtonText: 'Great'
+                });
+                document.getElementById('deposit-amount').value = "";
+                document.getElementById('deposit-trx').value = "";
             });
         }
     </script>
