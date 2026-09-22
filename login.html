@@ -4,35 +4,219 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - OXI E-Sports</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- SweetAlert2 & FontAwesome & Fonts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { background: #0b061a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: #160d2e; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; border: 1px solid rgba(0,255,209,0.2); text-align: center; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 12px; background: #b026ff; border: none; color: #fff; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .link { margin-top: 15px; font-size: 14px; color: #888; }
-        .link a { color: #00ffd1; text-decoration: none; }
+        :root {
+            --bg-dark: #0b061a;
+            --card-bg: #160d2e;
+            --cyan: #00ffd1;
+            --purple: #b026ff;
+            --text-light: #e0e0e0;
+            --danger: #ff4d4d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 380px;
+            border: 1px solid rgba(0, 255, 209, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--cyan);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .brand-sub {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--cyan);
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 209, 0.2);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--purple), #8a2be2);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 0 15px rgba(176, 38, 255, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(176, 38, 255, 0.7);
+        }
+
+        .footer-link {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .footer-link a {
+            color: var(--cyan);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h2 style="color:#00ffd1">WELCOME BACK</h2>
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="pass" placeholder="Password">
-        <button onclick="login()">Login Now</button>
-        <div class="link">Don't have an account? <a href="register.html">Sign Up</a></div>
+
+    <div class="login-card">
+        <div class="brand-title">OXI E-SPORTS</div>
+        <div class="brand-sub">Welcome back! Sign in to play</div>
+
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="login-email" placeholder="Email Address">
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="login-password" placeholder="Password">
+        </div>
+
+        <button class="btn-login" onclick="handleUserLogin()"><i class="fas fa-sign-in-alt"></i> Login Now</button>
+
+        <div class="footer-link">
+            Don't have an account? <a href="register.html">Register Here</a>
+        </div>
     </div>
+
+    <!-- User Configuration Script -->
     <script src="config.js"></script>
     <script>
-        function login() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            auth.signInWithEmailAndPassword(email, pass)
-                .then(() => window.location.href = "home.html")
-                .catch(err => SwalLight.fire('Error', err.message, 'error'));
+        // Redirect if already logged in (Fixes infinite loop)
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                const uKey = emailToKey(user.email);
+                db.ref(`bannedUsers/${uKey}`).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        auth.signOut();
+                    } else {
+                        window.location.href = "home.html";
+                    }
+                });
+            }
+        });
+
+        function handleUserLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!email || !password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Fields',
+                    text: 'Please enter both email and password.',
+                    confirmButtonColor: '#b026ff',
+                    background: '#160d2e',
+                    color: '#fff'
+                });
+                return;
+            }
+
+            const uKey = emailToKey(email);
+
+            // Check Banned status BEFORE allowing sign-in
+            db.ref(`bannedUsers/${uKey}`).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    const reason = snapshot.val().reason || 'Violation of App Terms';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Account Banned!',
+                        text: `Reason: ${reason}`,
+                        confirmButtonColor: '#ff4d4d',
+                        background: '#160d2e',
+                        color: '#fff'
+                    });
+                } else {
+                    // Sign In Execution
+                    auth.signInWithEmailAndPassword(email, password)
+                        .then(() => {
+                            window.location.href = "home.html";
+                        })
+                        .catch(err => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Failed',
+                                text: err.message,
+                                confirmButtonColor: '#b026ff',
+                                background: '#160d2e',
+                                color: '#fff'
+                            });
+                        });
+                }
+            });
         }
     </script>
 </body>
