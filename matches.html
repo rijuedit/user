@@ -2,130 +2,457 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournament Matches</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tournament Matches - OXI E-Sports</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- SweetAlert2 & FontAwesome & Fonts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        body { background: #fbf9ff; color: #333; font-family: 'Poppins', sans-serif; margin: 0; padding-bottom: 20px; }
-        .app-bar { background: #ffffff; padding: 15px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .app-bar h2 { font-size: 18px; margin: 0; }
-        
-        .match-card { background: #ffffff; margin: 15px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .card-header { background: #f8f8f8; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; color: #666; font-weight: 600; }
-        .card-body { padding: 15px; }
-        .match-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
-        
-        .match-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px; }
-        .info-item label { display: block; font-size: 10px; color: #999; text-transform: uppercase; }
-        .info-item span { font-size: 13px; font-weight: 700; color: #333; }
-        
-        .join-btn { width: 100%; background: #b026ff; color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .join-btn:disabled { background: #ccc; }
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        /* Registration Form Overlay */
-        .player-input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    <style>
+        :root {
+            --bg-light: #fbf9ff;
+            --card-light: #ffffff;
+            --purple: #b026ff;
+            --cyan-accent: #00ffd1;
+            --text-dark: #1f1b2e;
+            --text-sub: #75708a;
+            --border-color: #ebe7f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+
+        /* Top Mobile App Bar */
+        .app-bar {
+            background: var(--card-light);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(176, 38, 255, 0.06);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .bar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-icon {
+            font-size: 20px;
+            color: var(--purple);
+            cursor: pointer;
+        }
+
+        .category-title-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .user-wallet-badge {
+            background: rgba(176, 38, 255, 0.08);
+            color: var(--purple);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid rgba(176, 38, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Matches List Container */
+        .matches-container {
+            padding: 20px 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Light Theme Match Card */
+        .match-card {
+            background: var(--card-light);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(100, 80, 160, 0.08);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .card-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .match-tag {
+            background: rgba(176, 38, 255, 0.1);
+            color: var(--purple);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .match-schedule {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .match-heading {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        /* Stats Grid Inside Card */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            background: #f8f6ff;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .info-cell label {
+            display: block;
+            font-size: 10px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .info-cell span {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .win-highlight { color: #00b894 !important; }
+        .fee-highlight { color: var(--purple) !important; }
+
+        .type-grid {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Room Details Box (When Published) */
+        .room-credentials-box {
+            background: rgba(0, 255, 209, 0.1);
+            border: 1px solid #00ffd1;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #00a887;
+            font-weight: 700;
+        }
+
+        /* Join Button */
+        .btn-join-match {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--purple), #8a2be2);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(176, 38, 255, 0.25);
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-join-match:active {
+            transform: scale(0.98);
+        }
+
+        .btn-joined {
+            background: #00b894 !important;
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.25) !important;
+        }
+
+        /* Light Theme Dynamic Input Modal Styling */
+        .join-popup-input {
+            width: 100% !important;
+            padding: 12px 15px !important;
+            margin: 8px 0 !important;
+            border: 1px solid #ddd !important;
+            border-radius: 10px !important;
+            font-size: 14px !important;
+            outline: none !important;
+            background: #fafafa !important;
+        }
+
+        .join-popup-input:focus {
+            border-color: var(--purple) !important;
+            background: #ffffff !important;
+        }
+
+        .empty-matches {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-sub);
+        }
     </style>
 </head>
 <body>
 
+    <!-- Top App Bar -->
     <div class="app-bar">
-        <i class="fas fa-arrow-left" onclick="history.back()"></i>
-        <h2 id="cat-title">Matches</h2>
+        <div class="bar-left">
+            <i class="fas fa-arrow-left back-icon" onclick="history.back()"></i>
+            <span class="category-title-text" id="cat-title">Matches</span>
+        </div>
+        <div class="user-wallet-badge" onclick="window.location.href='wallet.html'">
+            <i class="fas fa-wallet"></i> ৳<span id="user-balance-text">0</span>
+        </div>
     </div>
 
-    <div id="match-list"></div>
+    <!-- Match List Container -->
+    <div class="matches-container" id="matches-list-wrapper">
+        <div class="empty-matches">
+            <i class="fas fa-spinner fa-spin" style="font-size: 28px; color: var(--purple); margin-bottom: 10px; display: block;"></i>
+            Loading tournament matches...
+        </div>
+    </div>
 
     <script src="config.js"></script>
     <script>
         checkUserAuth();
+
         const urlParams = new URLSearchParams(window.location.search);
         const catKey = urlParams.get('cat');
-        let userWallet = 0;
-        let userEmail = "";
 
+        let currentUserEmail = "";
+        let currentUserCleanEmail = "";
+        let currentUserWallet = 0;
+
+        // Auth & Wallet Balance Listener
         auth.onAuthStateChanged(user => {
-            if(user) {
-                userEmail = user.email;
-                db.ref('users/' + emailToKey(user.email)).on('value', s => userWallet = s.val().wallet || 0);
+            if (user) {
+                currentUserEmail = user.email;
+                currentUserCleanEmail = emailToKey(user.email);
+
+                db.ref(`users/${currentUserCleanEmail}`).on('value', snapshot => {
+                    if (snapshot.exists()) {
+                        currentUserWallet = snapshot.val().wallet || 0;
+                        document.getElementById('user-balance-text').innerText = currentUserWallet;
+                    }
+                });
+
+                if (catKey) {
+                    loadCategoryTitle();
+                    loadMatches();
+                } else {
+                    window.location.href = "home.html";
+                }
             }
         });
 
-        db.ref('match_categories/' + catKey).once('value', s => document.getElementById('cat-title').innerText = s.val().title);
-
-        db.ref('matches').on('value', snapshot => {
-            const list = document.getElementById('match-list');
-            list.innerHTML = "";
-            snapshot.forEach(child => {
-                const m = child.val();
-                if(m.categoryKey === catKey) {
-                    list.innerHTML += `
-                        <div class="match-card">
-                            <div class="card-header">
-                                <span>MATCH #${child.key.slice(-5).toUpperCase()}</span>
-                                <span>${m.matchDate} | ${m.matchTime}</span>
-                            </div>
-                            <div class="card-body">
-                                <div class="match-title">${m.title}</div>
-                                <div class="match-info-grid">
-                                    <div class="info-item"><label>Prize</label><span>৳${m.winPrize}</span></div>
-                                    <div class="info-item"><label>Per Kill</label><span>৳${m.perKill}</span></div>
-                                    <div class="info-item"><label>Entry</label><span>৳${m.entryFee}</span></div>
-                                </div>
-                                <div class="match-info-grid" style="background:#f9f9f9; padding:8px; border-radius:8px;">
-                                    <div class="info-item"><label>Type</label><span>${m.type}</span></div>
-                                    <div class="info-item"><label>Version</label><span>${m.version}</span></div>
-                                    <div class="info-item"><label>Map</label><span>${m.map}</span></div>
-                                </div>
-                                <button class="join-btn" onclick="openJoinModal('${child.key}', ${m.entryFee}, '${m.type}')">JOIN NOW</button>
-                            </div>
-                        </div>`;
+        function loadCategoryTitle() {
+            db.ref(`match_categories/${catKey}`).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    document.getElementById('cat-title').innerText = snapshot.val().title + " Matches";
                 }
             });
-        });
+        }
 
-        function openJoinModal(matchKey, fee, type) {
-            let teamSize = (type === 'SOLO') ? 1 : (type === 'DUO' ? 2 : 4);
-            let inputsHtml = "";
-            for(let i=1; i<=teamSize; i++) {
-                inputsHtml += `<input id="p${i}" class="player-input" placeholder="Enter Player ${i} Game Name">`;
+        function loadMatches() {
+            db.ref('matches').on('value', snapshot => {
+                const wrapper = document.getElementById('matches-list-wrapper');
+                wrapper.innerHTML = "";
+
+                if (!snapshot.exists()) {
+                    wrapper.innerHTML = `<div class="empty-matches"><i class="fas fa-gamepad" style="font-size:40px; color:#ccc; margin-bottom:10px; display:block;"></i>No active matches right now in this category.</div>`;
+                    return;
+                }
+
+                let matchCount = 0;
+
+                snapshot.forEach(child => {
+                    const match = child.val();
+
+                    if (match.categoryKey === catKey || match.category === catKey) {
+                        matchCount++;
+                        const matchKey = child.key;
+
+                        // Check if current user already joined this match
+                        const joinedUsers = match.joinedUsers || {};
+                        const isAlreadyJoined = joinedUsers.hasOwnProperty(currentUserCleanEmail);
+
+                        const hasRoomDetails = match.roomId && match.roomId.trim() !== "";
+
+                        wrapper.innerHTML += `
+                            <div class="match-card">
+                                <div class="card-top-bar">
+                                    <span class="match-tag">MATCH #${matchKey.slice(-5).toUpperCase()}</span>
+                                    <span class="match-schedule"><i class="far fa-clock"></i> ${match.matchDate || 'Today'} at ${match.matchTime || 'TBA'}</span>
+                                </div>
+
+                                <div class="match-heading">${match.title}</div>
+
+                                <div class="info-grid">
+                                    <div class="info-cell">
+                                        <label>Win Prize</label>
+                                        <span class="win-highlight">৳${match.winPrize || 0}</span>
+                                    </div>
+                                    <div class="info-cell">
+                                        <label>Per Kill</label>
+                                        <span>৳${match.perKill || 0}</span>
+                                    </div>
+                                    <div class="info-cell">
+                                        <label>Entry Fee</label>
+                                        <span class="fee-highlight">৳${match.entryFee || 0}</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-grid type-grid">
+                                    <div class="info-cell">
+                                        <label>Type</label>
+                                        <span>${match.type || 'SOLO'}</span>
+                                    </div>
+                                    <div class="info-cell">
+                                        <label>Version</label>
+                                        <span>${match.version || 'Mobile'}</span>
+                                    </div>
+                                    <div class="info-cell">
+                                        <label>Map</label>
+                                        <span>${match.map || 'Bermuda'}</span>
+                                    </div>
+                                </div>
+
+                                ${isAlreadyJoined && hasRoomDetails ? `
+                                    <div class="room-credentials-box">
+                                        <span><i class="fas fa-door-open"></i> Room ID: ${match.roomId}</span>
+                                        <span><i class="fas fa-key"></i> Pass: ${match.roomPassword || 'None'}</span>
+                                    </div>
+                                ` : ''}
+
+                                ${isAlreadyJoined ? `
+                                    <button class="btn-join-match btn-joined" disabled><i class="fas fa-check-circle"></i> Already Joined</button>
+                                ` : `
+                                    <button class="btn-join-match" onclick="showJoinMatchModal('${matchKey}', ${match.entryFee || 0}, '${match.type || 'SOLO'}', '${match.title}')">
+                                        <i class="fas fa-[#ff4d4d] fa-gamepad"></i> JOIN MATCH (৳${match.entryFee || 0})
+                                    </button>
+                                `}
+                            </div>
+                        `;
+                    }
+                });
+
+                if (matchCount === 0) {
+                    wrapper.innerHTML = `<div class="empty-matches"><i class="fas fa-gamepad" style="font-size:40px; color:#ccc; margin-bottom:10px; display:block;"></i>No matches in this category. Check back later!</div>`;
+                }
+            });
+        }
+
+        // Dynamic Team Size Join Registration Modal
+        function showJoinMatchModal(matchKey, entryFee, matchType, matchTitle) {
+            let teamSize = 1; // SOLO default
+            if (matchType === 'DUO') teamSize = 2;
+            if (matchType === 'SQUAD') teamSize = 4;
+
+            const totalFee = entryFee * teamSize;
+
+            if (currentUserWallet < totalFee) {
+                SwalLight.fire({
+                    icon: 'warning',
+                    title: 'Insufficient Balance!',
+                    html: `You need <b>৳${totalFee}</b> to join this ${matchType} match.<br>Your Current Balance: <b>৳${currentUserWallet}</b>`,
+                    confirmButtonText: 'Add Money Now',
+                    showCancelButton: true
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        window.location.href = "wallet.html";
+                    }
+                });
+                return;
+            }
+
+            // Generate Dynamic Input Boxes based on Team Size (1, 2, or 4)
+            let inputsHtml = `<p style="font-size:13px; color:#666; margin-bottom:12px;">Total Entry Fee: <b>৳${totalFee}</b> (${matchType} Registration)</p>`;
+            for (let i = 1; i <= teamSize; i++) {
+                inputsHtml += `
+                    <input id="player-input-${i}" class="join-popup-input" placeholder="Player ${i} Free Fire Game Name / UID">
+                `;
             }
 
             Swal.fire({
-                title: 'Join Tournament',
-                html: `<div style="text-align:left;"><p style="font-size:13px; color:#666;">Entry Fee: ৳${fee}</p>${inputsHtml}</div>`,
+                title: `Join ${matchType} Match`,
+                background: '#ffffff',
+                color: '#1a1a1a',
+                html: `<div style="text-align:left;">${inputsHtml}</div>`,
                 showCancelButton: true,
-                confirmButtonText: 'Confirm Join',
-                confirmButtonColor: '#b026ff'
+                confirmButtonText: 'Confirm & Pay ৳' + totalFee,
+                confirmButtonColor: '#b026ff',
+                cancelButtonColor: '#888'
             }).then(result => {
-                if(result.isConfirmed) {
-                    let players = [];
-                    for(let i=1; i<=teamSize; i++) {
-                        let name = document.getElementById('p'+i).value.trim();
-                        if(name) players.push(name);
+                if (result.isConfirmed) {
+                    let playerNames = [];
+                    for (let i = 1; i <= teamSize; i++) {
+                        const pName = document.getElementById(`player-input-${i}`).value.trim();
+                        if (pName) playerNames.push(pName);
                     }
 
-                    if(players.length < teamSize) {
-                        SwalLight.fire('Error', 'Please fill all player names.', 'error');
+                    if (playerNames.length < teamSize) {
+                        SwalLight.fire('Incomplete Details', `Please enter game names for all ${teamSize} players.`, 'error');
                         return;
                     }
 
-                    if(userWallet < fee) {
-                        SwalLight.fire('Low Balance', 'Please add money to your wallet.', 'warning');
-                        return;
-                    }
-
-                    // Deduct money and join
-                    db.ref('users/' + emailToKey(userEmail) + '/wallet').transaction(current => current - fee);
-                    db.ref('matches/' + matchKey + '/joinedUsers/' + emailToKey(userEmail)).set({
-                        players: players,
-                        joinedAt: Date.now()
-                    }).then(() => {
-                        SwalLight.fire('Success', 'You have joined the match!', 'success');
+                    // Deduct Fee and Register Team in Database
+                    db.ref(`users/${currentUserCleanEmail}/wallet`).transaction(current => (current || 0) - totalFee).then(() => {
+                        db.ref(`matches/${matchKey}/joinedUsers/${currentUserCleanEmail}`).set({
+                            players: playerNames,
+                            teamSize: teamSize,
+                            joinedAt: Date.now()
+                        }).then(() => {
+                            SwalLight.fire('Registration Successful!', 'You have joined the match. Room credentials will appear here before match starts.', 'success');
+                        });
                     });
                 }
             });
