@@ -3,429 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXI E-Sports - Tournaments</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 -->
+    <title>OXI E-Sports - Home</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #0b061a; color: #ffffff; user-select: none; }
+        body { background: #0b061a; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 70px; }
         
-        /* Category Card (Image 1 Style) */
-        .topup-card { background-color: #160d2e; border: 1px solid #281655; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .topup-card:active { transform: scale(0.97); }
+        /* Header */
+        .header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: #160d2e; border-bottom: 1px solid rgba(0,255,209,0.1); }
+        .wallet-badge { background: rgba(0,255,209,0.1); color: #00ffd1; padding: 5px 12px; border-radius: 20px; border: 1px solid #00ffd1; font-weight: bold; cursor: pointer; }
+
+        /* Banner Slider */
+        .slider-container { width: 100%; overflow: hidden; margin-top: 10px; }
+        .slider { display: flex; transition: transform 0.5s ease-in-out; }
+        .slider img { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; flex-shrink: 0; }
+
+        /* Category Grid (1:1 Ratio) */
+        .grid-title { padding: 20px 20px 10px; font-size: 18px; font-weight: bold; color: #00ffd1; }
+        .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
+        .cat-card { background: #160d2e; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .cat-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
+        .cat-card p { padding: 10px; text-align: center; margin: 0; font-weight: 600; font-size: 14px; }
 
         /* Bottom Nav */
-        .bottom-nav-active { color: #b026ff; }
-
-        /* Light Theme Modals for Match List & Join Screens (Images 2,3,4,5) */
-        .light-screen { background-color: #fbf9ff; color: #1e293b; }
-        
-        /* Match Card (Image 2) */
-        .light-match-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; }
-        .match-badge { position: absolute; top: 0; right: 0; background-color: #f97316; color: white; font-size: 10px; font-weight: bold; padding: 4px 8px; border-bottom-left-radius: 8px; }
-        .match-progress-track { height: 8px; background-color: #d1d5db; border-radius: 10px; overflow: hidden; }
-        .match-progress-fill { height: 100%; background: linear-gradient(90deg, #9ca3af, #6b7280); }
-        .btn-outline-join { border: 1px solid #1d4ed8; color: #1d4ed8; padding: 4px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-        .dropdown-box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #1d4ed8; display: flex; justify-content: space-between; align-items: center; }
-        .starts-in-bar { background-color: #16a34a; color: white; text-align: center; font-size: 11px; font-weight: bold; padding: 6px 0; }
-
-        /* Join Screen Inputs */
-        .join-type-btn { border: 1px solid #c4b5fd; background-color: #ede9fe; color: #1e1b4b; padding: 4px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-        .join-type-btn.active { background-color: #facc15; border-color: #eab308; color: #000; }
-        .player-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; font-size: 12px; margin-bottom: 8px; outline: none; }
-        .player-input:focus { border-color: #6366f1; }
-        .join-now-btn { background-color: #6366f1; color: white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 14px; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #160d2e; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid rgba(0,255,209,0.1); }
+        .nav-item { color: #888; text-decoration: none; text-align: center; font-size: 12px; }
+        .nav-item.active { color: #00ffd1; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body>
 
-    <!-- Top Header (Dark) -->
-    <header class="bg-[#0b061a] border-b border-[#281655] sticky top-0 z-40 py-3">
-        <div class="max-w-md mx-auto px-4 flex items-center justify-between">
-            <span class="text-xl font-bold text-[#00ffd1] tracking-wide">OXI E-SPORTS</span>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#160d2e] border border-[#b026ff]/50 text-[#00ffd1] font-bold text-xs">
-                    <i class="fa-solid fa-wallet"></i> ৳<span id="userWalletDisplay">0</span>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-md mx-auto px-4 mt-4 space-y-6">
-
-        <!-- Banner Slider (Dark Theme) -->
-        <div id="bannerCarousel" class="relative overflow-hidden rounded-xl border border-[#281655] bg-[#160d2e] h-40">
-            <div id="bannerInner" class="flex transition-transform duration-500 h-full"></div>
-        </div>
-
-        <!-- CATEGORIES SECTION (Image 1 Style - Dark Theme) -->
-        <section id="userCategoriesSection">
-            <h2 class="text-base font-bold text-white mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-gamepad text-[#b026ff]"></i> Games Tournaments
-            </h2>
-            <div id="userCategoriesGrid" class="grid grid-cols-2 gap-4">
-                <!-- Categories dynamically loaded here -->
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Bottom Navigation Bar (Dark) -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-[#0b061a] border-t border-[#281655] py-2 z-40">
-        <div class="max-w-md mx-auto grid grid-cols-3 text-center text-[10px] text-gray-500 font-semibold">
-            <button onclick="closeAllLightScreens()" class="flex flex-col items-center gap-1 bottom-nav-active">
-                <i class="fa-solid fa-gamepad text-lg"></i><span>Matches</span>
-            </button>
-            <button onclick="SwalDark.fire('Info', 'My Matches coming soon!', 'info')" class="flex flex-col items-center gap-1">
-                <i class="fa-solid fa-trophy text-lg"></i><span>My Matches</span>
-            </button>
-            <button onclick="SwalDark.fire('Info', 'Deposit coming soon!', 'info')" class="flex flex-col items-center gap-1">
-                <i class="fa-solid fa-wallet text-lg"></i><span>Deposit</span>
-            </button>
-        </div>
-    </nav>
-
-
-    <!-- ===================================================================== -->
-    <!-- MATCH LIST SCREEN (LIGHT THEME - IMAGE 2) -->
-    <!-- ===================================================================== -->
-    <div id="matchListScreen" class="fixed inset-0 light-screen z-[100] hidden flex-col">
-        <!-- Header -->
-        <div class="bg-white flex items-center px-4 py-4 border-b border-gray-200 shadow-sm">
-            <i class="fa-solid fa-chevron-left text-lg cursor-pointer text-black font-bold mr-4" onclick="closeMatchListScreen()"></i>
-            <h1 id="selectedCategoryTitle" class="text-base font-bold text-black flex-1">Matches</h1>
-            <i class="fa-solid fa-rotate-right text-blue-500 text-lg cursor-pointer" onclick="refreshMatches()"></i>
-        </div>
-        
-        <!-- Matches Content -->
-        <div id="userCategoryMatchesList" class="flex-1 overflow-y-auto p-4 bg-[#f8f9fe]">
-            <!-- Match Cards Populated Here -->
+    <div class="header">
+        <h2 style="color:#00ffd1; margin:0;">OXI E-SPORTS</h2>
+        <div class="wallet-badge" onclick="location.href='wallet.html'">
+            <i class="fas fa-wallet"></i> ৳<span id="u-balance">0</span>
         </div>
     </div>
 
-
-    <!-- ===================================================================== -->
-    <!-- MATCH JOIN SCREEN (LIGHT THEME - IMAGES 3, 4, 5) -->
-    <!-- ===================================================================== -->
-    <div id="joinMatchScreen" class="fixed inset-0 light-screen z-[110] hidden flex-col">
-        <!-- Header -->
-        <div class="flex items-center px-4 py-4 bg-[#fbf9ff]">
-            <i class="fa-solid fa-chevron-left text-lg cursor-pointer text-black font-bold" onclick="closeJoinScreen()"></i>
-        </div>
-
-        <!-- Join Form Body -->
-        <div class="flex-1 overflow-y-auto p-4 bg-[#fbf9ff] pb-24">
-            <!-- Match Info Card -->
-            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mb-4 relative">
-                <h2 id="jm_title" class="font-bold text-black text-lg">Match Title</h2>
-                <p id="jm_time" class="text-xs text-gray-500 mt-1 mb-3">Time : -</p>
-                <div class="flex justify-between text-xs text-gray-700 border-b border-gray-200 border-dashed pb-3 mb-3">
-                    <div>Win Prize : <span id="jm_prize" class="font-bold">0</span></div>
-                    <div>Entry Fee : <span id="jm_fee" class="font-bold">0</span></div>
-                </div>
-                
-                <p class="text-center text-[#f97316] text-[11px] font-bold mb-4">*অবশ্যই এখানে আপনার গেমের নামটি<br>দিয়ে জয়েন করবেন</p>
-                
-                <!-- Type Selection Buttons (Solo, Duo, Squad) -->
-                <div id="jm_type_buttons" class="flex justify-center gap-2 mb-4">
-                    <!-- Buttons Rendered Here -->
-                </div>
-
-                <!-- Input Fields for Player Names -->
-                <div id="jm_player_inputs" class="space-y-2">
-                    <!-- Inputs Rendered Here based on selection -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Fixed Bottom Button -->
-        <div class="p-4 bg-[#fbf9ff]">
-            <button onclick="submitJoinMatch()" class="join-now-btn shadow-lg">Join Now!</button>
-        </div>
+    <!-- Banners -->
+    <div class="slider-container">
+        <div class="slider" id="main-slider"></div>
     </div>
 
+    <div class="grid-title">SELECT TO PLAY</div>
+    <div class="cat-grid" id="category-list"></div>
 
-    <!-- JS LOGIC -->
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item active"><i class="fas fa-home"></i>Home</a>
+        <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i>Wallet</a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i>Profile</a>
+    </div>
+
+    <script src="config.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
-            authDomain: "oxi-esports.firebaseapp.com",
-            databaseURL: "https://oxi-esports-default-rtdb.firebaseio.com",
-            projectId: "oxi-esports",
-            storageBucket: "oxi-esports.firebasestorage.app",
-            messagingSenderId: "924353594492",
-            appId: "1:924353594492:web:08329a3d1f67e7a5da35f9"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-        let currentUserCleanEmail = '';
-        let currentWallet = 0;
-        let currentCatKey = null;
+        checkUserAuth();
 
-        // Variables for Join Flow
-        let joinMatchKey = null;
-        let joinMatchFee = 0;
-        let joinMatchType = 'Solo';
-        let selectedTeamSize = 1; 
-
-        const SwalDark = Swal.mixin({ customClass: { popup: 'bg-[#160d2e] text-white rounded-xl', title: 'text-white', confirmButton: 'bg-[#b026ff] text-white px-4 py-2 rounded-lg' }, buttonsStyling: false });
-        const SwalLight = Swal.mixin({ customClass: { popup: 'bg-white text-black rounded-xl', title: 'text-black', confirmButton: 'bg-[#6366f1] text-white px-4 py-2 rounded-lg' }, buttonsStyling: false });
-
+        // Load Balance
         auth.onAuthStateChanged(user => {
-            if (!user) { window.location.href = 'index.html'; return; }
-            currentUserCleanEmail = user.email.replace(/\./g, ',');
-            initApp();
+            if(user) {
+                db.ref('users/' + emailToKey(user.email)).on('value', s => {
+                    document.getElementById('u-balance').innerText = s.val().wallet || 0;
+                });
+            }
         });
 
-        function initApp() {
-            // Wallet sync
-            db.ref(`users/${currentUserCleanEmail}`).on('value', snap => {
-                const u = snap.val() || {};
-                currentWallet = u.wallet || 0;
-                document.getElementById('userWalletDisplay').innerText = currentWallet;
+        // Load Banners
+        db.ref('banners').on('value', snapshot => {
+            const slider = document.getElementById('main-slider');
+            slider.innerHTML = "";
+            snapshot.forEach(child => {
+                const b = child.val();
+                slider.innerHTML += `<img src="${b.image}" onclick="if('${b.link}') window.open('${b.link}')">`;
             });
+            startAutoSlider();
+        });
 
-            // Banners (Dark Theme)
-            db.ref('banners').on('value', snap => {
-                const bans = snap.val() || {};
-                const inner = document.getElementById('bannerInner');
-                inner.innerHTML = '';
-                Object.values(bans).forEach(b => {
-                    const img = document.createElement('img');
-                    img.src = b.image;
-                    img.className = 'w-full flex-shrink-0 h-full object-cover cursor-pointer';
-                    if(b.link) img.onclick = () => window.open(b.link, '_blank');
-                    inner.appendChild(img);
-                });
+        // Load Categories
+        db.ref('match_categories').on('value', snapshot => {
+            const list = document.getElementById('category-list');
+            list.innerHTML = "";
+            snapshot.forEach(child => {
+                const cat = child.val();
+                list.innerHTML += `
+                    <div class="cat-card" onclick="location.href='matches.html?cat=${child.key}'">
+                        <img src="${cat.image}">
+                        <p>${cat.title}</p>
+                    </div>`;
             });
+        });
 
-            // Load Categories (Image 1 Style)
-            db.ref('match_categories').on('value', snap => {
-                const cats = snap.val() || {};
-                const grid = document.getElementById('userCategoriesGrid');
-                grid.innerHTML = '';
-                Object.entries(cats).forEach(([k, c]) => {
-                    grid.innerHTML += `
-                        <div class="topup-card" onclick="openMatchListScreen('${k}', '${c.title}', '${c.image}')">
-                            <div class="relative pb-[100%] w-full">
-                                <img src="${c.image}" class="absolute inset-0 w-full h-full object-cover">
-                            </div>
-                            <div class="p-3 text-center text-white font-bold text-sm truncate">${c.title}</div>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        function closeAllLightScreens() {
-            document.getElementById('matchListScreen').style.display = 'none';
-            document.getElementById('joinMatchScreen').style.display = 'none';
-        }
-
-        // ==========================================
-        // MATCH LIST SCREEN (IMAGE 2)
-        // ==========================================
-        function openMatchListScreen(catKey, catTitle, catImage) {
-            currentCatKey = catKey;
-            document.getElementById('selectedCategoryTitle').innerText = catTitle;
-            document.getElementById('matchListScreen').style.display = 'flex';
-            
-            // Store category image globally to use as thumbnail in match card
-            window.currentCatImg = catImage;
-            refreshMatches();
-        }
-
-        function closeMatchListScreen() { document.getElementById('matchListScreen').style.display = 'none'; }
-        
-        function refreshMatches() {
-            if(!currentCatKey) return;
-            db.ref('matches').orderByChild('categoryKey').equalTo(currentCatKey).once('value', snap => {
-                const matches = snap.val() || {};
-                const list = document.getElementById('userCategoryMatchesList');
-                list.innerHTML = '';
-
-                if(Object.keys(matches).length === 0) {
-                    list.innerHTML = `<p class="text-center text-gray-500 mt-10 text-sm">No matches found.</p>`;
-                    return;
+        function startAutoSlider() {
+            let index = 0;
+            const slider = document.getElementById('main-slider');
+            setInterval(() => {
+                const images = slider.getElementsByTagName('img');
+                if(images.length > 1) {
+                    index = (index + 1) % images.length;
+                    slider.style.transform = `translateX(-${index * 100}%)`;
                 }
-
-                Object.entries(matches).forEach(([mKey, m]) => {
-                    const isJoined = m.joinedUsers && m.joinedUsers[currentUserCleanEmail];
-                    const joinedCount = m.joinedUsers ? Object.keys(m.joinedUsers).length : 0;
-                    const totalSlots = m.slots || 100;
-                    const fillPercent = Math.min((joinedCount / totalSlots) * 100, 100);
-
-                    // Random tag number (or generate based on timestamp)
-                    const matchIdTag = "#" + String(m.timestamp || 1034).slice(-4);
-
-                    list.innerHTML += `
-                        <div class="light-match-card relative">
-                            <span class="match-badge">${matchIdTag}</span>
-                            
-                            <!-- Header -->
-                            <div class="p-3 flex items-center">
-                                <img src="${window.currentCatImg || 'https://via.placeholder.com/150'}" class="w-14 h-10 rounded object-cover shadow-sm">
-                                <div class="ml-3">
-                                    <h3 class="font-bold text-gray-900 text-sm">${m.title}</h3>
-                                    <p class="text-[10px] text-red-500 font-medium">Time : ${m.matchDate || ''} at ${m.matchTime || ''}</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Stats Grid -->
-                            <div class="grid grid-cols-3 gap-2 px-3 pb-2 text-center text-[10px] text-gray-500 font-semibold">
-                                <div>WIN PRIZE<br><span class="text-black font-bold text-xs">${m.winPrize || 0} TK</span></div>
-                                <div>ENTRY TYPE<br><span class="text-black font-bold text-xs">${m.type || 'Solo'}</span></div>
-                                <div>ENTRY FEE<br><span class="text-black font-bold text-xs">${m.entryFee || 0} TK</span></div>
-                                <div class="mt-1">PER KILL<br><span class="text-black font-bold text-xs">${m.perKill || 0} TK</span></div>
-                                <div class="mt-1">MAP<br><span class="text-black font-bold text-xs">${m.map || 'Bermuda'}</span></div>
-                                <div class="mt-1">VERSION<br><span class="text-black font-bold text-xs">${m.version || 'MOBILE'}</span></div>
-                            </div>
-
-                            <!-- Progress & Join -->
-                            <div class="px-3 py-2 flex items-center justify-between border-t border-gray-100">
-                                <div class="flex-1 mr-3">
-                                    <div class="match-progress-track">
-                                        <div class="match-progress-fill" style="width: ${fillPercent}%"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[9px] text-gray-500 mt-1 font-medium">
-                                        <span>Only ${totalSlots} Spots Are Left</span>
-                                        <span>${joinedCount}/${totalSlots}</span>
-                                    </div>
-                                </div>
-                                <button onclick="${isJoined ? `showRoomDetails('${mKey}')` : `openJoinScreen('${mKey}', '${m.title}', '${m.matchDate}', '${m.matchTime}', ${m.winPrize}, ${m.entryFee}, '${m.type}')`}" 
-                                        class="btn-outline-join ${isJoined ? 'bg-gray-100 text-gray-600 border-gray-300' : ''}">
-                                    ${isJoined ? 'Joined' : 'Join'}
-                                </button>
-                            </div>
-
-                            <!-- Dropdowns -->
-                            <div class="px-3 pb-3 flex gap-2">
-                                <div onclick="${isJoined ? `showRoomDetails('${mKey}')` : `SwalLight.fire('Locked', 'Join match to view Room Details', 'warning')`}" class="dropdown-box flex-1 cursor-pointer bg-blue-50/30">
-                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Room Details</span>
-                                    <i class="fa-solid fa-chevron-down text-gray-400"></i>
-                                </div>
-                                <div onclick="SwalLight.fire('Prize Info', '1st: ৳${m.winPrize}', 'info')" class="dropdown-box flex-1 cursor-pointer bg-blue-50/30">
-                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-trophy"></i> Total Prize Details</span>
-                                    <i class="fa-solid fa-chevron-down text-gray-400"></i>
-                                </div>
-                            </div>
-
-                            <!-- Starts In Bar -->
-                            <div class="starts-in-bar">
-                                <i class="fa-regular fa-clock"></i> STARTS IN - Wait for time
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        async function showRoomDetails(mKey) {
-            const snap = await db.ref(`matches/${mKey}`).once('value');
-            const m = snap.val() || {};
-            SwalLight.fire({
-                title: 'Room Details',
-                html: `<div class="text-left text-sm mt-3"><b>Room ID:</b> ${m.roomId || 'Not published yet'}<br><b>Password:</b> ${m.roomPassword || 'Not published yet'}</div>`
-            });
-        }
-
-
-        // ==========================================
-        // MATCH JOIN SCREEN (IMAGES 3, 4, 5)
-        // ==========================================
-        function openJoinScreen(mKey, title, date, time, prize, fee, type) {
-            joinMatchKey = mKey;
-            joinMatchFee = fee;
-            joinMatchType = type;
-            
-            document.getElementById('jm_title').innerText = title;
-            document.getElementById('jm_time').innerText = `Time : ${date || ''} at ${time || ''}`;
-            document.getElementById('jm_prize').innerText = prize;
-            document.getElementById('jm_fee').innerText = fee;
-
-            renderTypeButtons(type);
-            document.getElementById('joinMatchScreen').style.display = 'flex';
-        }
-
-        function closeJoinScreen() { document.getElementById('joinMatchScreen').style.display = 'none'; }
-
-        // Logic for Solo, Duo, Squad Buttons
-        function renderTypeButtons(matchType) {
-            const container = document.getElementById('jm_type_buttons');
-            container.innerHTML = '';
-            
-            // If match is Solo -> only Solo button.
-            // If match is Duo -> Solo, Duo.
-            // If match is Squad -> Solo, Duo, Squad. (According to Images 4 & 5)
-            const types = ['Solo'];
-            if(matchType === 'Duo' || matchType === 'Squad') types.push('Duo');
-            if(matchType === 'Squad') types.push('Squad');
-
-            // Select default size (max allowed by match)
-            selectedTeamSize = types.length === 3 ? 4 : (types.length === 2 ? 2 : 1);
-            
-            types.forEach(t => {
-                const num = t === 'Solo' ? 1 : (t === 'Duo' ? 2 : 4);
-                const isActive = selectedTeamSize === num;
-                container.innerHTML += `
-                    <button onclick="selectTeamSize(${num})" class="join-type-btn ${isActive ? 'active' : ''}">${t}</button>
-                `;
-            });
-            renderInputs(selectedTeamSize);
-        }
-
-        function selectTeamSize(size) {
-            selectedTeamSize = size;
-            renderTypeButtons(joinMatchType); // Re-render to update active state
-        }
-
-        function renderInputs(count) {
-            const container = document.getElementById('jm_player_inputs');
-            container.innerHTML = '';
-            for(let i = 1; i <= count; i++) {
-                container.innerHTML += `<input type="text" id="player_${i}_name" class="player-input" placeholder="Player ${i} Name">`;
-            }
-        }
-
-        async function submitJoinMatch() {
-            // Collect names
-            let names = [];
-            for(let i = 1; i <= selectedTeamSize; i++) {
-                const val = document.getElementById(`player_${i}_name`).value.trim();
-                if(!val) { SwalLight.fire('Error', `Please enter Player ${i} Name`, 'error'); return; }
-                names.push(val);
-            }
-
-            // Check Balance (Fee is per player in this logic? Let's assume Total Fee = fee * teamSize)
-            const totalFee = joinMatchFee * selectedTeamSize;
-            
-            if(currentWallet < totalFee) {
-                SwalLight.fire('Insufficient Balance', `You need ৳${totalFee} to join as ${selectedTeamSize} player(s). Please deposit.`, 'error');
-                return;
-            }
-
-            // Deduct & Save
-            await db.ref(`users/${currentUserCleanEmail}/wallet`).set(currentWallet - totalFee);
-            await db.ref(`matches/${joinMatchKey}/joinedUsers/${currentUserCleanEmail}`).set({
-                players: names,
-                teamSize: selectedTeamSize,
-                joinedAt: Date.now()
-            });
-
-            closeJoinScreen();
-            refreshMatches();
-            SwalLight.fire('Success!', 'Successfully joined the match.', 'success');
+            }, 3000);
         }
     </script>
 </body>
