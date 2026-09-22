@@ -1,1 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Matches</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { background: #fbf9ff; color: #333; font-family: 'Poppins', sans-serif; margin: 0; padding-bottom: 20px; }
+        .app-bar { background: #ffffff; padding: 15px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .app-bar h2 { font-size: 18px; margin: 0; }
+        
+        .match-card { background: #ffffff; margin: 15px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .card-header { background: #f8f8f8; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; color: #666; font-weight: 600; }
+        .card-body { padding: 15px; }
+        .match-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+        
+        .match-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px; }
+        .info-item label { display: block; font-size: 10px; color: #999; text-transform: uppercase; }
+        .info-item span { font-size: 13px; font-weight: 700; color: #333; }
+        
+        .join-btn { width: 100%; background: #b026ff; color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .join-btn:disabled { background: #ccc; }
 
+        /* Registration Form Overlay */
+        .player-input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <div class="app-bar">
+        <i class="fas fa-arrow-left" onclick="history.back()"></i>
+        <h2 id="cat-title">Matches</h2>
+    </div>
+
+    <div id="match-list"></div>
+
+    <script src="config.js"></script>
+    <script>
+        checkUserAuth();
+        const urlParams = new URLSearchParams(window.location.search);
+        const catKey = urlParams.get('cat');
+        let userWallet = 0;
+        let userEmail = "";
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                userEmail = user.email;
+                db.ref('users/' + emailToKey(user.email)).on('value', s => userWallet = s.val().wallet || 0);
+            }
+        });
+
+        db.ref('match_categories/' + catKey).once('value', s => document.getElementById('cat-title').innerText = s.val().title);
+
+        db.ref('matches').on('value', snapshot => {
+            const list = document.getElementById('match-list');
+            list.innerHTML = "";
+            snapshot.forEach(child => {
+                const m = child.val();
+                if(m.categoryKey === catKey) {
+                    list.innerHTML += `
+                        <div class="match-card">
+                            <div class="card-header">
+                                <span>MATCH #${child.key.slice(-5).toUpperCase()}</span>
+                                <span>${m.matchDate} | ${m.matchTime}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="match-title">${m.title}</div>
+                                <div class="match-info-grid">
+                                    <div class="info-item"><label>Prize</label><span>৳${m.winPrize}</span></div>
+                                    <div class="info-item"><label>Per Kill</label><span>৳${m.perKill}</span></div>
+                                    <div class="info-item"><label>Entry</label><span>৳${m.entryFee}</span></div>
+                                </div>
+                                <div class="match-info-grid" style="background:#f9f9f9; padding:8px; border-radius:8px;">
+                                    <div class="info-item"><label>Type</label><span>${m.type}</span></div>
+                                    <div class="info-item"><label>Version</label><span>${m.version}</span></div>
+                                    <div class="info-item"><label>Map</label><span>${m.map}</span></div>
+                                </div>
+                                <button class="join-btn" onclick="openJoinModal('${child.key}', ${m.entryFee}, '${m.type}')">JOIN NOW</button>
+                            </div>
+                        </div>`;
+                }
+            });
+        });
+
+        function openJoinModal(matchKey, fee, type) {
+            let teamSize = (type === 'SOLO') ? 1 : (type === 'DUO' ? 2 : 4);
+            let inputsHtml = "";
+            for(let i=1; i<=teamSize; i++) {
+                inputsHtml += `<input id="p${i}" class="player-input" placeholder="Enter Player ${i} Game Name">`;
+            }
+
+            Swal.fire({
+                title: 'Join Tournament',
+                html: `<div style="text-align:left;"><p style="font-size:13px; color:#666;">Entry Fee: ৳${fee}</p>${inputsHtml}</div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Confirm Join',
+                confirmButtonColor: '#b026ff'
+            }).then(result => {
+                if(result.isConfirmed) {
+                    let players = [];
+                    for(let i=1; i<=teamSize; i++) {
+                        let name = document.getElementById('p'+i).value.trim();
+                        if(name) players.push(name);
+                    }
+
+                    if(players.length < teamSize) {
+                        SwalLight.fire('Error', 'Please fill all player names.', 'error');
+                        return;
+                    }
+
+                    if(userWallet < fee) {
+                        SwalLight.fire('Low Balance', 'Please add money to your wallet.', 'warning');
+                        return;
+                    }
+
+                    // Deduct money and join
+                    db.ref('users/' + emailToKey(userEmail) + '/wallet').transaction(current => current - fee);
+                    db.ref('matches/' + matchKey + '/joinedUsers/' + emailToKey(userEmail)).set({
+                        players: players,
+                        joinedAt: Date.now()
+                    }).then(() => {
+                        SwalLight.fire('Success', 'You have joined the match!', 'success');
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
