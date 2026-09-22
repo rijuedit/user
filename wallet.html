@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - OXI E-Sports</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #0b061a; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        .balance-card { background: linear-gradient(45deg, #b026ff, #00ffd1); padding: 40px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+        .method-card { background: #160d2e; margin: 15px; padding: 20px; border-radius: 15px; border: 1px solid rgba(0,255,209,0.2); }
+        .method-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
+        input { width: 100%; padding: 12px; margin-top: 15px; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; }
+        .add-btn { width: 100%; background: #00ffd1; color: #000; border: none; padding: 15px; margin-top: 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="balance-card">
+        <p style="margin:0; opacity:0.8;">Current Balance</p>
+        <h1 style="margin:5px 0;">৳<span id="bal-text">0</span></h1>
+    </div>
 
+    <div class="method-card">
+        <h3>Deposit Money</h3>
+        <p style="font-size:12px; color:#888;">Send money to these numbers and submit TRX ID.</p>
+        <div id="gateways"></div>
+        
+        <input type="number" id="dep-amount" placeholder="Enter Amount">
+        <input type="text" id="dep-trx" placeholder="Transaction ID">
+        <select id="dep-method" class="add-btn" style="background:#160d2e; color:#fff; border:1px solid #333; margin-top:10px;">
+            <option value="bKash">bKash</option>
+            <option value="Nagad">Nagad</option>
+            <option value="Rocket">Rocket</option>
+        </select>
+        <button class="add-btn" onclick="submitDeposit()">SUBMIT REQUEST</button>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        checkUserAuth();
+        let userKey = "";
+        let userEmail = "";
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                userEmail = user.email;
+                userKey = emailToKey(user.email);
+                db.ref('users/' + userKey).on('value', s => document.getElementById('bal-text').innerText = s.val().wallet || 0);
+            }
+        });
+
+        db.ref('paymentSettings').on('value', s => {
+            const d = s.val() || {};
+            const html = `
+                <div class="method-item"><span>bKash:</span> <b>${d.bkash || 'Off'}</b></div>
+                <div class="method-item"><span>Nagad:</span> <b>${d.nagad || 'Off'}</b></div>
+                <div class="method-item"><span>Rocket:</span> <b>${d.rocket || 'Off'}</b></div>
+            `;
+            document.getElementById('gateways').innerHTML = html;
+        });
+
+        function submitDeposit() {
+            const amt = document.getElementById('dep-amount').value;
+            const trx = document.getElementById('dep-trx').value;
+            const method = document.getElementById('dep-method').value;
+
+            if(amt < 10 || !trx) {
+                SwalLight.fire('Error', 'Invalid details', 'error');
+                return;
+            }
+
+            db.ref('deposit_requests').push({
+                userKey, userEmail,
+                amount: amt,
+                trxId: trx,
+                gateway: method,
+                status: 'pending',
+                timestamp: Date.now()
+            }).then(() => {
+                SwalLight.fire('Success', 'Request submitted! Wait for approval.', 'success');
+                document.getElementById('dep-amount').value = "";
+                document.getElementById('dep-trx').value = "";
+            });
+        }
+    </script>
+</body>
+</html>
