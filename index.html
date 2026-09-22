@@ -30,12 +30,12 @@
             background-color: var(--bg-color);
             display: flex; align-items: center; justify-content: center;
             min-height: 100vh; color: var(--text);
-            overflow: hidden;
+            overflow: hidden; padding: 15px;
         }
 
         .auth-container {
             background: var(--card-bg);
-            padding: 30px;
+            padding: 30px 25px;
             border-radius: 20px;
             width: 100%; max-width: 400px;
             border: 2px solid var(--primary);
@@ -77,6 +77,14 @@
         }
         .btn-submit:hover { opacity: 0.9; }
 
+        .forgot-pass {
+            text-align: right; margin-top: -5px; margin-bottom: 15px;
+        }
+        .forgot-pass a {
+            color: var(--accent); font-size: 12px; text-decoration: none; cursor: pointer;
+        }
+        .forgot-pass a:hover { text-decoration: underline; }
+
         .swal-bg { background: #150a2e !important; color: white !important; }
     </style>
 </head>
@@ -93,13 +101,18 @@
         <!-- Login Form -->
         <div id="login-form" class="auth-form active">
             <div class="input-group">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="login-email" placeholder="Email Address">
+                <i class="fas fa-user"></i>
+                <input type="text" id="login-identifier" placeholder="Email or Phone Number">
             </div>
             <div class="input-group">
                 <i class="fas fa-lock"></i>
                 <input type="password" id="login-pass" placeholder="Password">
             </div>
+            
+            <div class="forgot-pass">
+                <a onclick="handleForgotPassword()">Forgot Password?</a>
+            </div>
+
             <button class="btn-submit" onclick="login()">LOGIN</button>
         </div>
 
@@ -111,7 +124,6 @@
             </div>
             <div class="input-group">
                 <i class="fas fa-phone"></i>
-                <!-- নম্বর তুলে দিয়ে সাধারণ লেখা দেওয়া হয়েছে -->
                 <input type="tel" id="reg-phone" placeholder="Phone Number">
             </div>
             <div class="input-group">
@@ -127,6 +139,13 @@
     </div>
 
     <script>
+        const Popup = Swal.mixin({
+            background: '#150a2e',
+            color: '#ffffff',
+            confirmButtonColor: '#9d00ff',
+            customClass: { popup: 'swal-bg' }
+        });
+
         // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
@@ -151,39 +170,102 @@
             document.getElementById(type + '-tab-btn').classList.add('active');
         }
 
+        // --- Registration Logic ---
         function register() {
             const name = document.getElementById('reg-name').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const pass = document.getElementById('reg-pass').value.trim();
 
-            if(!name || !phone || !email || !pass) return Swal.fire('Error', 'Fill all fields!', 'error');
+            if(!name || !phone || !email || !pass) return Popup.fire('Error', 'Please fill all fields!', 'error');
 
             auth.createUserWithEmailAndPassword(email, pass).then(res => {
                 const key = emailToKey(email);
+                
+                // Save User Info
                 db.ref(`users/${key}`).set({
                     name: name,
                     phone: phone,
                     email: email,
                     wallet: 0,
                     joined: firebase.database.ServerValue.TIMESTAMP
-                }).then(() => {
+                });
+
+                // Save Phone to Email mapping for easy lookup
+                db.ref(`phoneToEmail/${phone}`).set(email).then(() => {
                     window.location.href = 'home.html';
                 });
-            }).catch(err => Swal.fire('Error', err.message, 'error'));
+
+            }).catch(err => Popup.fire('Error', err.message, 'error'));
         }
 
+        // --- Login Logic (Dual Login Support: Email or Phone) ---
         function login() {
-            const email = document.getElementById('login-email').value.trim();
+            const identifier = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
-            if(!email || !pass) return Swal.fire('Error', 'Fill all fields!', 'error');
 
-            auth.signInWithEmailAndPassword(email, pass).then(res => {
-                window.location.href = 'home.html';
-            }).catch(err => Swal.fire('Error', err.message, 'error'));
+            if(!identifier || !pass) return Popup.fire('Error', 'Please enter email/phone and password!', 'error');
+
+            // Check if input is Email or Phone Number
+            if (identifier.includes('@')) {
+                // Input is Email
+                performAuthLogin(identifier, pass);
+            } else {
+                // Input is Phone Number -> Find associated Email
+                db.ref(`phoneToEmail/${identifier}`).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        const associatedEmail = snapshot.val();
+                        performAuthLogin(associatedEmail, pass);
+                    } else {
+                        Popup.fire('Not Found', 'No account found registered with this Phone Number!', 'error');
+                    }
+                });
+            }
         }
 
-        // Redirect if logged in
+        function performAuthLogin(email, password) {
+            auth.signInWithEmailAndPassword(email, password).then(() => {
+                window.location.href = 'home.html';
+            }).catch(err => Popup.fire('Login Failed', err.message, 'error'));
+        }
+
+        // --- Forgot Password Logic ---
+        function handleForgotPassword() {
+            Popup.fire({
+                title: 'Reset Password',
+                text: 'Enter your registered Email or Phone Number:',
+                input: 'text',
+                inputPlaceholder: 'Email or Phone Number',
+                showCancelButton: true,
+                confirmButtonText: 'Send Reset Link'
+            }).then(result => {
+                if (result.isConfirmed && result.value) {
+                    const input = result.value.trim();
+                    if (!input) return;
+
+                    if (input.includes('@')) {
+                        sendResetEmail(input);
+                    } else {
+                        // Find email by Phone number
+                        db.ref(`phoneToEmail/${input}`).once('value', snapshot => {
+                            if (snapshot.exists()) {
+                                sendResetEmail(snapshot.val());
+                            } else {
+                                Popup.fire('Not Found', 'No account found with this Phone Number!', 'error');
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function sendResetEmail(email) {
+            auth.sendPasswordResetEmail(email).then(() => {
+                Popup.fire('Reset Link Sent!', `A password reset link has been sent to ${email}. Please check your Gmail inbox/spam folder.`, 'success');
+            }).catch(err => Popup.fire('Error', err.message, 'error'));
+        }
+
+        // Redirect if already logged in
         auth.onAuthStateChanged(user => { if(user) window.location.href = 'home.html'; });
     </script>
 </body>
