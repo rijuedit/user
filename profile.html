@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - OXI E-Sports</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- SweetAlert2 & FontAwesome & Fonts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <style>
+        :root {
+            --bg-dark: #0b061a;
+            --card-bg: #160d2e;
+            --cyan: #00ffd1;
+            --purple: #b026ff;
+            --text-light: #e0e0e0;
+            --danger: #ff4d4d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Profile Top Card */
+        .profile-header {
+            background: linear-gradient(180deg, #160d2e 0%, #0b061a 100%);
+            padding: 30px 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 255, 209, 0.1);
+        }
+
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--purple), var(--cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.4);
+        }
+
+        .user-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .user-email {
+            font-size: 13px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* Balance & Joined Info Grid */
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            background: var(--card-bg);
+            margin: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item p {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .stat-item h3 {
+            font-size: 18px;
+            color: var(--cyan);
+            margin-top: 4px;
+        }
+
+        /* Profile Menu List */
+        .menu-list {
+            padding: 0 20px;
+        }
+
+        .menu-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 15px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .menu-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-left i {
+            font-size: 18px;
+            color: var(--cyan);
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-left span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .menu-val {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .logout-btn {
+            background: rgba(255, 77, 77, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            padding: 14px;
+            border-radius: 12px;
+            width: calc(100% - 40px);
+            margin: 10px 20px 20px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #160d2e;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid rgba(0, 255, 209, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            color: #888;
+            text-decoration: none;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--cyan);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="avatar-circle"><i class="fas fa-user"></i></div>
+        <div class="user-name" id="profile-name">Loading...</div>
+        <div class="user-email" id="profile-email">loading@user.com</div>
+    </div>
+
+    <!-- Balance & Joined Stats -->
+    <div class="stats-row">
+        <div class="stat-item">
+            <p>Wallet Balance</p>
+            <h3 id="profile-wallet">৳0</h3>
+        </div>
+        <div class="stat-item" style="border-left: 1px solid rgba(255,255,255,0.08); padding-left: 20px;">
+            <p>Mobile Number</p>
+            <h3 id="profile-phone" style="font-size: 15px; color: #fff;">N/A</h3>
+        </div>
+    </div>
+
+    <!-- Options Menu -->
+    <div class="menu-list">
+        <div class="menu-card">
+            <div class="menu-item" onclick="editProfileName()">
+                <div class="menu-left">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Edit Profile Name</span>
+                </div>
+                <i class="fas fa-chevron-right" style="font-size: 12px; color: #555;"></i>
+            </div>
+            
+            <div class="menu-item" onclick="editPhoneNumber()">
+                <div class="menu-left">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile Number</span>
+                </div>
+                <span class="menu-val" id="phone-display-text">Update</span>
+            </div>
+
+            <div class="menu-item" onclick="changePassword()">
+                <div class="menu-left">
+                    <i class="fas fa-lock"></i>
+                    <span>Change Password</span>
+                </div>
+                <i class="fas fa-chevron-right" style="font-size: 12px; color: #555;"></i>
+            </div>
+        </div>
+
+        <div class="menu-card">
+            <div class="menu-item" onclick="openSupportTelegram()">
+                <div class="menu-left">
+                    <i class="fab fa-telegram-plane"></i>
+                    <span>Customer Support</span>
+                </div>
+                <i class="fas fa-external-link-alt" style="font-size: 12px; color: #555;"></i>
+            </div>
+        </div>
+    </div>
+
+    <button class="logout-btn" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> Logout Account</button>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i>Home</a>
+        <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i>Wallet</a>
+        <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i>Profile</a>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        checkUserAuth();
+
+        let currentUserKey = "";
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUserKey = emailToKey(user.email);
+                document.getElementById('profile-email').innerText = user.email;
+
+                db.ref(`users/${currentUserKey}`).on('value', snapshot => {
+                    if (snapshot.exists()) {
+                        const u = snapshot.val();
+                        const phone = u.phone || u.mobile || u.phoneNumber || u.number || 'Not Set';
+                        
+                        document.getElementById('profile-name').innerText = u.name || 'Gamer';
+                        document.getElementById('profile-wallet').innerText = '৳' + (u.wallet || 0);
+                        document.getElementById('profile-phone').innerText = phone;
+                        document.getElementById('phone-display-text').innerText = phone;
+                    }
+                });
+            }
+        });
+
+        function editProfileName() {
+            SwalLight.fire({
+                title: 'Update Name',
+                input: 'text',
+                inputPlaceholder: 'Enter your new name',
+                showCancelButton: true,
+                confirmButtonText: 'Save Name'
+            }).then(result => {
+                if (result.isConfirmed && result.value.trim()) {
+                    db.ref(`users/${currentUserKey}`).update({ name: result.value.trim() }).then(() => {
+                        SwalLight.fire('Updated!', 'Your profile name has been updated.', 'success');
+                    });
+                }
+            });
+        }
+
+        function editPhoneNumber() {
+            SwalLight.fire({
+                title: 'Update Phone Number',
+                input: 'number',
+                inputPlaceholder: '01XXXXXXXXX',
+                showCancelButton: true,
+                confirmButtonText: 'Save Number'
+            }).then(result => {
+                if (result.isConfirmed && result.value.trim()) {
+                    db.ref(`users/${currentUserKey}`).update({ phone: result.value.trim() }).then(() => {
+                        SwalLight.fire('Updated!', 'Mobile number saved successfully.', 'success');
+                    });
+                }
+            });
+        }
+
+        function changePassword() {
+            const email = auth.currentUser ? auth.currentUser.email : "";
+            if (email) {
+                auth.sendPasswordResetEmail(email).then(() => {
+                    SwalLight.fire('Reset Link Sent', 'Password reset email sent to ' + email, 'success');
+                }).catch(err => {
+                    SwalLight.fire('Error', err.message, 'error');
+                });
+            }
+        }
+
+        function openSupportTelegram() {
+            window.open('https://t.me/your_support_channel', '_blank');
+        }
+
+        function logoutUser() {
+            SwalLight.fire({
+                title: 'Logout?',
+                text: 'Are you sure you want to exit your account?',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Logout',
+                confirmButtonColor: '#ff4d4d'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    auth.signOut().then(() => window.location.href = "login.html");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
