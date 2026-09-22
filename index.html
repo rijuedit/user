@@ -3,270 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OXI E-Sports - Login/Register</title>
+    <title>OXI E-Sports</title>
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0b021a;
-            --card-bg: #150a2e;
-            --primary: #9d00ff;
-            --accent: #00ffcc;
-            --text: #ffffff;
-            --text-dim: #b0a3c4;
-            --error: #ff1744;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body {
-            background-color: var(--bg-color);
-            display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; color: var(--text);
-            overflow: hidden; padding: 15px;
+            background-color: #0b061a;
+            color: #00ffd1;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
 
-        .auth-container {
-            background: var(--card-bg);
-            padding: 30px 25px;
-            border-radius: 20px;
-            width: 100%; max-width: 400px;
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
-            text-align: center;
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 255, 209, 0.6);
+            margin-bottom: 20px;
         }
 
-        .auth-container h2 { color: var(--accent); margin-bottom: 25px; letter-spacing: 1px; }
-
-        .tab-switcher {
-            display: flex; background: #0b021a; border-radius: 12px;
-            padding: 5px; margin-bottom: 25px;
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(176, 38, 255, 0.2);
+            border-top: 4px solid #b026ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .tab-btn {
-            flex: 1; padding: 10px; border: none; background: none;
-            color: var(--text-dim); cursor: pointer; border-radius: 8px; font-weight: 600;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-
-        .tab-btn.active { background: var(--primary); color: white; }
-
-        .auth-form { display: none; text-align: left; }
-        .auth-form.active { display: block; }
-
-        .input-group { position: relative; margin-bottom: 15px; }
-        .input-group i { position: absolute; left: 15px; top: 14px; color: var(--accent); }
-        .input-group input {
-            width: 100%; padding: 12px 15px 12px 45px;
-            background: #0b021a; border: 1px solid #3d2b63;
-            border-radius: 10px; color: white; outline: none; transition: 0.3s;
-        }
-        .input-group input:focus { border-color: var(--primary); }
-
-        .btn-submit {
-            width: 100%; padding: 14px; background: var(--primary);
-            color: white; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
-            margin-top: 10px; transition: 0.3s;
-        }
-        .btn-submit:hover { opacity: 0.9; }
-
-        .forgot-pass {
-            text-align: right; margin-top: -5px; margin-bottom: 15px;
-        }
-        .forgot-pass a {
-            color: var(--accent); font-size: 12px; text-decoration: none; cursor: pointer;
-        }
-        .forgot-pass a:hover { text-decoration: underline; }
-
-        .swal-bg { background: #150a2e !important; color: white !important; }
     </style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <h2>OXI E-SPORTS</h2>
-        
-        <div class="tab-switcher">
-            <button class="tab-btn active" id="login-tab-btn" onclick="switchAuth('login')">Login</button>
-            <button class="tab-btn" id="register-tab-btn" onclick="switchAuth('register')">Register</button>
-        </div>
+    <div class="logo">OXI E-SPORTS</div>
+    <div class="loader"></div>
 
-        <!-- Login Form -->
-        <div id="login-form" class="auth-form active">
-            <div class="input-group">
-                <i class="fas fa-user"></i>
-                <input type="text" id="login-identifier" placeholder="Email or Phone Number">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="login-pass" placeholder="Password">
-            </div>
-            
-            <div class="forgot-pass">
-                <a onclick="handleForgotPassword()">Forgot Password?</a>
-            </div>
-
-            <button class="btn-submit" onclick="login()">LOGIN</button>
-        </div>
-
-        <!-- Register Form -->
-        <div id="register-form" class="auth-form">
-            <div class="input-group">
-                <i class="fas fa-user"></i>
-                <input type="text" id="reg-name" placeholder="Full Name">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-phone"></i>
-                <input type="tel" id="reg-phone" placeholder="Phone Number">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="reg-email" placeholder="Email Address">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="reg-pass" placeholder="Password (Min 6 chars)">
-            </div>
-            <button class="btn-submit" onclick="register()">REGISTER</button>
-        </div>
-    </div>
-
+    <script src="config.js"></script>
     <script>
-        const Popup = Swal.mixin({
-            background: '#150a2e',
-            color: '#ffffff',
-            confirmButtonColor: '#9d00ff',
-            customClass: { popup: 'swal-bg' }
-        });
-
-        // --- Firebase Config ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
-            authDomain: "oxi-esports.firebaseapp.com",
-            projectId: "oxi-esports",
-            storageBucket: "oxi-esports.firebasestorage.app",
-            messagingSenderId: "924353594492",
-            appId: "1:924353594492:web:08329a3d1f67e7a5da35f9",
-            databaseURL: "https://oxi-esports-default-rtdb.firebaseio.com"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-
-        function emailToKey(email) { return email ? email.replace(/\./g, ',') : ''; }
-
-        function switchAuth(type) {
-            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
-            document.getElementById(type + '-form').classList.add('active');
-            document.getElementById(type + '-tab-btn').classList.add('active');
-        }
-
-        // --- Registration Logic ---
-        function register() {
-            const name = document.getElementById('reg-name').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-pass').value.trim();
-
-            if(!name || !phone || !email || !pass) return Popup.fire('Error', 'Please fill all fields!', 'error');
-
-            auth.createUserWithEmailAndPassword(email, pass).then(res => {
-                const key = emailToKey(email);
-                
-                // Save User Info
-                db.ref(`users/${key}`).set({
-                    name: name,
-                    phone: phone,
-                    email: email,
-                    wallet: 0,
-                    joined: firebase.database.ServerValue.TIMESTAMP
-                });
-
-                // Save Phone to Email mapping for easy lookup
-                db.ref(`phoneToEmail/${phone}`).set(email).then(() => {
-                    window.location.href = 'home.html';
-                });
-
-            }).catch(err => Popup.fire('Error', err.message, 'error'));
-        }
-
-        // --- Login Logic (Dual Login Support: Email or Phone) ---
-        function login() {
-            const identifier = document.getElementById('login-identifier').value.trim();
-            const pass = document.getElementById('login-pass').value.trim();
-
-            if(!identifier || !pass) return Popup.fire('Error', 'Please enter email/phone and password!', 'error');
-
-            // Check if input is Email or Phone Number
-            if (identifier.includes('@')) {
-                // Input is Email
-                performAuthLogin(identifier, pass);
-            } else {
-                // Input is Phone Number -> Find associated Email
-                db.ref(`phoneToEmail/${identifier}`).once('value', snapshot => {
-                    if (snapshot.exists()) {
-                        const associatedEmail = snapshot.val();
-                        performAuthLogin(associatedEmail, pass);
-                    } else {
-                        Popup.fire('Not Found', 'No account found registered with this Phone Number!', 'error');
-                    }
-                });
-            }
-        }
-
-        function performAuthLogin(email, password) {
-            auth.signInWithEmailAndPassword(email, password).then(() => {
-                window.location.href = 'home.html';
-            }).catch(err => Popup.fire('Login Failed', err.message, 'error'));
-        }
-
-        // --- Forgot Password Logic ---
-        function handleForgotPassword() {
-            Popup.fire({
-                title: 'Reset Password',
-                text: 'Enter your registered Email or Phone Number:',
-                input: 'text',
-                inputPlaceholder: 'Email or Phone Number',
-                showCancelButton: true,
-                confirmButtonText: 'Send Reset Link'
-            }).then(result => {
-                if (result.isConfirmed && result.value) {
-                    const input = result.value.trim();
-                    if (!input) return;
-
-                    if (input.includes('@')) {
-                        sendResetEmail(input);
-                    } else {
-                        // Find email by Phone number
-                        db.ref(`phoneToEmail/${input}`).once('value', snapshot => {
-                            if (snapshot.exists()) {
-                                sendResetEmail(snapshot.val());
-                            } else {
-                                Popup.fire('Not Found', 'No account found with this Phone Number!', 'error');
-                            }
-                        });
-                    }
+        // Automatic Auth Redirection
+        auth.onAuthStateChanged(user => {
+            setTimeout(() => {
+                if (user) {
+                    window.location.href = "home.html";
+                } else {
+                    window.location.href = "login.html";
                 }
-            });
-        }
-
-        function sendResetEmail(email) {
-            auth.sendPasswordResetEmail(email).then(() => {
-                Popup.fire('Reset Link Sent!', `A password reset link has been sent to ${email}. Please check your Gmail inbox/spam folder.`, 'success');
-            }).catch(err => Popup.fire('Error', err.message, 'error'));
-        }
-
-        // Redirect if already logged in
-        auth.onAuthStateChanged(user => { if(user) window.location.href = 'home.html'; });
+            }, 1000);
+        });
     </script>
 </body>
 </html>
