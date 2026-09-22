@@ -14,7 +14,6 @@
         :root {
             --bg-dark: #0f172a;
             --card-bg: #1e293b;
-            --accent-blue: #38bdf8;
         }
 
         body {
@@ -45,10 +44,24 @@
             cursor: pointer;
         }
 
+        /* Banner Carousel */
+        .banner-carousel-box {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+
+        .banner-img-slide {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+        }
+
         /* Category Card Grid */
         .category-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 1rem;
         }
 
@@ -77,20 +90,6 @@
             font-weight: bold;
             color: #ffffff;
             font-size: 0.95rem;
-        }
-
-        /* Banner Carousel */
-        .banner-carousel-box {
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #334155;
-            margin-bottom: 20px;
-        }
-
-        .banner-img-slide {
-            height: 160px;
-            object-fit: cover;
-            width: 100%;
         }
 
         /* Deposit UI */
