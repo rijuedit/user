@@ -3,60 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account - OXI E-Sports</title>
+    <title>Register - OXI E-Sports</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- SweetAlert2 & FontAwesome & Fonts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { background: #0b061a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .reg-box { background: #160d2e; padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; border: 1px solid rgba(0,255,209,0.2); }
-        h2 { color: #00ffd1; text-align: center; margin-bottom: 25px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: #00ffd1; }
-        button { width: 100%; padding: 12px; background: #b026ff; border: none; color: #fff; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #8a2be2; box-shadow: 0 0 15px #b026ff; }
-        .link { text-align: center; margin-top: 15px; font-size: 14px; color: #888; }
-        .link a { color: #00ffd1; text-decoration: none; }
+        :root {
+            --bg-dark: #0b061a;
+            --card-bg: #160d2e;
+            --cyan: #00ffd1;
+            --purple: #b026ff;
+            --text-light: #e0e0e0;
+            --danger: #ff4d4d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .reg-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 35px 30px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(0, 255, 209, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--cyan);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .brand-sub {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--cyan);
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 13px 15px 13px 45px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 209, 0.2);
+        }
+
+        .btn-reg {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--purple), #8a2be2);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 0 15px rgba(176, 38, 255, 0.4);
+        }
+
+        .btn-reg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(176, 38, 255, 0.7);
+        }
+
+        .footer-link {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .footer-link a {
+            color: var(--cyan);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <div class="reg-box">
-        <h2>OXI E-SPORTS</h2>
-        <input type="text" id="name" placeholder="Full Name">
-        <input type="number" id="phone" placeholder="Mobile Number">
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="pass" placeholder="Password (Min 6 chars)">
-        <button onclick="register()">Create Account</button>
-        <div class="link">Already have an account? <a href="login.html">Login</a></div>
+
+    <div class="reg-card">
+        <div class="brand-title">OXI E-SPORTS</div>
+        <div class="brand-sub">Create an account to join tournaments</div>
+
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" id="reg-name" placeholder="Full Name">
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-phone"></i>
+            <input type="number" id="reg-phone" placeholder="Mobile Number (017XXXXXXXX)">
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="reg-email" placeholder="Email Address">
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="reg-password" placeholder="Password (Min 6 Characters)">
+        </div>
+
+        <button class="btn-reg" onclick="handleUserRegistration()"><i class="fas fa-user-plus"></i> Create Account</button>
+
+        <div class="footer-link">
+            Already have an account? <a href="login.html">Login Here</a>
+        </div>
     </div>
 
+    <!-- User Configuration Script -->
     <script src="config.js"></script>
     <script>
-        function register() {
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const pass = document.getElementById('pass').value;
+        // Redirect if already logged in
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                window.location.href = "home.html";
+            }
+        });
 
-            if(!name || !phone || !email || pass.length < 6) {
-                SwalLight.fire('Error', 'Please fill all fields correctly.', 'error');
+        function handleUserRegistration() {
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            if (!name || !phone || !email || !password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Form',
+                    text: 'Please fill in all fields.',
+                    confirmButtonColor: '#b026ff',
+                    background: '#160d2e',
+                    color: '#fff'
+                });
                 return;
             }
 
-            auth.createUserWithEmailAndPassword(email, pass).then(res => {
-                const uKey = emailToKey(email);
-                db.ref('users/' + uKey).set({
-                    name: name,
-                    phone: phone,
-                    email: email,
-                    wallet: 0,
-                    joined: Date.now()
-                }).then(() => {
-                    SwalLight.fire('Success', 'Account created! Loading home...', 'success');
-                    setTimeout(() => window.location.href = "home.html", 1500);
+            if (password.length < 6) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Weak Password',
+                    text: 'Password must be at least 6 characters long.',
+                    confirmButtonColor: '#b026ff',
+                    background: '#160d2e',
+                    color: '#fff'
                 });
-            }).catch(err => SwalLight.fire('Error', err.message, 'error'));
+                return;
+            }
+
+            // Create Firebase Auth Account
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    const uKey = emailToKey(email);
+
+                    // Save Profile details to Realtime Database
+                    db.ref(`users/${uKey}`).set({
+                        name: name,
+                        phone: phone,
+                        email: email,
+                        wallet: 0,
+                        joinedAt: Date.now()
+                    }).then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Registration Successful!',
+                            text: 'Welcome to OXI E-Sports',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            background: '#160d2e',
+                            color: '#fff'
+                        }).then(() => {
+                            window.location.href = "home.html";
+                        });
+                    });
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Registration Failed',
+                        text: err.message,
+                        confirmButtonColor: '#b026ff',
+                        background: '#160d2e',
+                        color: '#fff'
+                    });
+                });
         }
     </script>
 </body>
