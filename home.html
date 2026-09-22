@@ -21,7 +21,7 @@
             background-color: var(--bg-dark);
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-bottom: 70px;
+            padding-bottom: 75px;
         }
 
         .header-bar {
@@ -42,9 +42,9 @@
             border-radius: 20px;
             font-weight: bold;
             font-size: 0.9rem;
+            cursor: pointer;
         }
 
-        /* Method Cards UI (Exact Match to Images 2 & 3) */
         .gateway-selector {
             display: flex;
             gap: 10px;
@@ -86,12 +86,6 @@
             display: block;
         }
 
-        .gateway-card img {
-            height: 22px;
-            object-fit: contain;
-        }
-
-        /* Pink Deposit Box (Exact Match to Images 2 & 3) */
         .pink-deposit-card {
             background-color: #e91e63;
             border-radius: 12px;
@@ -195,9 +189,23 @@
             color: #38bdf8;
         }
 
+        .match-card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
         .swal2-popup.swal-dark {
             background-color: #1e293b !important;
             color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+        }
+
+        .swal2-input {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border: 1px solid #334155 !important;
         }
     </style>
 </head>
@@ -212,16 +220,37 @@
     </div>
 
     <div class="container p-3">
-        <!-- Tab 1: Home / Matches -->
+        
+        <!-- Tab 1: Home / Tournament Categories & Matches -->
         <div id="tab-home" class="tab-content">
-            <h6 class="text-light mb-3 fw-bold">Select Tournament Category</h6>
-            <div id="homeCategories" class="row g-3"></div>
+            
+            <!-- Category View -->
+            <div id="userCategoryView">
+                <h6 class="text-light mb-3 fw-bold"><i class="fas fa-fire me-2 text-warning"></i>Select Game Category</h6>
+                <div id="homeCategories" class="row g-3"></div>
+            </div>
+
+            <!-- Matches View -->
+            <div id="userMatchView" class="d-none">
+                <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="showUserCategories()">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </button>
+                    <h6 class="mb-0 fw-bold text-info" id="selectedUserCatTitle">Matches</h6>
+                </div>
+                <div id="userMatchesList" class="row g-3"></div>
+            </div>
+
         </div>
 
-        <!-- Tab 2: Deposit Screen (Exact Match to Images 2 & 3) -->
+        <!-- Tab 2: My Matches -->
+        <div id="tab-mymatches" class="tab-content d-none">
+            <h6 class="text-light mb-3 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>My Joined Matches</h6>
+            <div id="myMatchesList" class="row g-3"></div>
+        </div>
+
+        <!-- Tab 3: Deposit Screen -->
         <div id="tab-deposit" class="tab-content d-none">
-            
-            <!-- Payment Gateway Selector -->
             <div class="gateway-selector">
                 <div id="card-bkash" class="gateway-card active" onclick="selectGateway('bkash')">
                     <i class="fas fa-check-circle check-icon"></i>
@@ -237,18 +266,15 @@
                 </div>
             </div>
 
-            <!-- Pink Form Box -->
             <div class="pink-deposit-card">
                 <div class="pink-title">ট্রানজেকশন আইডি দিন</div>
                 <input type="text" id="trxIdInput" class="form-control pink-input" placeholder="ট্রানজেকশন আইডি দিন">
 
-                <!-- Amount Field Container (Shown in Manual Mode - Image 3) -->
                 <div id="amountFieldContainer" style="display: none;">
                     <div class="pink-title mt-2">টাকার পরিমাণ দিন</div>
                     <input type="number" id="amountInput" class="form-control pink-input" placeholder="টাকার পরিমাণ দিন">
                 </div>
 
-                <!-- Dynamic Instruction List -->
                 <ul class="instruction-list">
                     <li id="step1">*247# ডায়াল করে আপনার BKASH মোবাইল মেনুতে যান অথবা BKASH অ্যাপ এ যান।</li>
                     <li><span class="highlight-yellow">Send Money</span> - এ ক্লিক করুন।</li>
@@ -270,6 +296,7 @@
 
             <button class="verify-btn" onclick="submitDepositVerification()">VERIFY</button>
         </div>
+
     </div>
 
     <!-- Bottom Navigation Bar -->
@@ -277,6 +304,10 @@
         <div class="bottom-nav-item active" id="bnav-home" onclick="switchTab('home')">
             <i class="fas fa-gamepad fs-5 d-block mb-1"></i>
             <span>Matches</span>
+        </div>
+        <div class="bottom-nav-item" id="bnav-mymatches" onclick="switchTab('mymatches')">
+            <i class="fas fa-trophy fs-5 d-block mb-1"></i>
+            <span>My Matches</span>
         </div>
         <div class="bottom-nav-item" id="bnav-deposit" onclick="switchTab('deposit')">
             <i class="fas fa-plus-circle fs-5 d-block mb-1"></i>
@@ -311,6 +342,7 @@
 
         let currentUser = null;
         let currentUserCleanEmail = '';
+        let userWalletBalance = 0;
         let selectedMethod = 'bkash';
         let isAutoMode = true;
         let paymentSettings = {};
@@ -330,11 +362,11 @@
                 currentUser = user;
                 currentUserCleanEmail = emailToKey(user.email);
                 
-                // Realtime Balance Sync
                 db.ref(`users/${currentUserCleanEmail}`).on('value', (snap) => {
                     if (snap.exists()) {
                         const u = snap.val();
-                        document.getElementById('userBalanceDisplay').innerText = u.wallet || 0;
+                        userWalletBalance = u.wallet || 0;
+                        document.getElementById('userBalanceDisplay').innerText = userWalletBalance;
                     }
                 });
 
@@ -359,8 +391,206 @@
 
             document.getElementById('tab-' + tab).classList.remove('d-none');
             document.getElementById('bnav-' + tab).classList.add('active');
+
+            if (tab === 'mymatches') loadMyJoinedMatches();
         }
 
+        function loadCategories() {
+            db.ref('match_categories').on('value', (snap) => {
+                const container = document.getElementById('homeCategories');
+                container.innerHTML = '';
+                if (!snap.exists()) {
+                    container.innerHTML = '<p class="text-muted text-center">No categories available.</p>';
+                    return;
+                }
+                snap.forEach((child) => {
+                    const cat = child.val();
+                    const key = child.key;
+                    container.innerHTML += `
+                        <div class="col-6 col-md-4" onclick="showMatchesForCategory('${key}', '${cat.title}')">
+                            <div class="card p-2 text-center" style="background:#1e293b; border:1px solid #334155; cursor:pointer;">
+                                <img src="${cat.image || 'https://via.placeholder.com/150'}" class="img-fluid rounded mb-2" style="height:100px; object-fit:cover;">
+                                <h6 class="fw-bold text-white mb-0">${cat.title}</h6>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function showMatchesForCategory(catKey, catTitle) {
+            document.getElementById('selectedUserCatTitle').innerText = catTitle + ' - Matches';
+            document.getElementById('userCategoryView').classList.add('d-none');
+            document.getElementById('userMatchView').classList.remove('d-none');
+
+            db.ref('matches').orderByChild('categoryKey').equalTo(catKey).on('value', (snap) => {
+                const container = document.getElementById('userMatchesList');
+                container.innerHTML = '';
+                if (!snap.exists()) {
+                    container.innerHTML = '<p class="text-muted text-center">No matches available in this category.</p>';
+                    return;
+                }
+                snap.forEach((child) => {
+                    const m = child.val();
+                    const mKey = child.key;
+                    renderMatchCard(container, mKey, m);
+                });
+            });
+        }
+
+        function showUserCategories() {
+            document.getElementById('userMatchView').classList.add('d-none');
+            document.getElementById('userCategoryView').classList.remove('d-none');
+        }
+
+        function renderMatchCard(container, mKey, m) {
+            const joinedUsers = m.joinedUsers || {};
+            const joinedCount = Object.keys(joinedUsers).length;
+            const hasJoined = !!joinedUsers[currentUserCleanEmail];
+
+            let actionBtnHtml = '';
+            if (hasJoined) {
+                actionBtnHtml = `
+                    <button class="btn btn-success w-100 fw-bold" onclick="viewRoomDetails('${m.roomId || ''}', '${m.roomPassword || ''}')">
+                        <i class="fas fa-key me-1"></i>ROOM DETAILS
+                    </button>
+                `;
+            } else if (joinedCount >= (m.totalSpots || 48)) {
+                actionBtnHtml = `<button class="btn btn-secondary w-100 fw-bold" disabled>MATCH FULL</button>`;
+            } else {
+                actionBtnHtml = `
+                    <button class="btn btn-info text-white w-100 fw-bold" onclick="joinMatchPrompt('${mKey}', ${m.entryFee || 0})">
+                        JOIN MATCH (৳${m.entryFee || 0})
+                    </button>
+                `;
+            }
+
+            container.innerHTML += `
+                <div class="col-12 col-md-6">
+                    <div class="match-card p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-info">${m.type || 'SOLO'}</span>
+                            <span class="badge bg-warning text-dark">${joinedCount} / ${m.totalSpots || 48} Joined</span>
+                        </div>
+                        <h5 class="fw-bold text-white mb-2">${m.title}</h5>
+                        <div class="small text-muted mb-3">
+                            <div><i class="far fa-clock me-1 text-info"></i>${m.matchTime || 'N/A'}</div>
+                            <div><i class="fas fa-map-marker-alt me-1 text-danger"></i>Map: ${m.map || 'Bermuda'}</div>
+                        </div>
+                        <div class="row g-1 text-center bg-dark p-2 rounded mb-3 small">
+                            <div class="col-4 border-end border-secondary">
+                                <span class="d-block text-muted">Prize</span>
+                                <span class="fw-bold text-success">৳${m.prizePool || 0}</span>
+                            </div>
+                            <div class="col-4 border-end border-secondary">
+                                <span class="d-block text-muted">Per Kill</span>
+                                <span class="fw-bold text-warning">৳${m.perKill || 0}</span>
+                            </div>
+                            <div class="col-4">
+                                <span class="d-block text-muted">Entry</span>
+                                <span class="fw-bold text-danger">৳${m.entryFee || 0}</span>
+                            </div>
+                        </div>
+                        ${actionBtnHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function joinMatchPrompt(mKey, entryFee) {
+            if (userWalletBalance < entryFee) {
+                SwalDark.fire({
+                    icon: 'error',
+                    title: 'Insufficient Balance!',
+                    text: `Your balance (৳${userWalletBalance}) is lower than the Entry Fee (৳${entryFee}). Please deposit first.`,
+                    confirmButtonText: 'Deposit Now'
+                }).then(() => switchTab('deposit'));
+                return;
+            }
+
+            SwalDark.fire({
+                title: 'Join Tournament Match',
+                html: `
+                    <input id="ffName" class="swal2-input" placeholder="Free Fire Game Name">
+                    <input id="ffUid" class="swal2-input" placeholder="Free Fire UID">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Confirm & Pay',
+                preConfirm: () => {
+                    const gameName = document.getElementById('ffName').value.trim();
+                    const gameUid = document.getElementById('ffUid').value.trim();
+                    if (!gameName || !gameUid) {
+                        Swal.showValidationMessage('Game Name and UID are required!');
+                    }
+                    return { gameName, gameUid };
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const { gameName, gameUid } = res.value;
+
+                    // Deduct balance and join match
+                    db.ref(`users/${currentUserCleanEmail}/wallet`).transaction((current) => {
+                        return (current || 0) - entryFee;
+                    }).then((result) => {
+                        if (result.committed) {
+                            db.ref(`matches/${mKey}/joinedUsers/${currentUserCleanEmail}`).set({
+                                gameName: gameName,
+                                gameUid: gameUid,
+                                joinedAt: new Date().toISOString()
+                            }).then(() => {
+                                SwalDark.fire('Joined Successfully!', 'You have successfully registered for this match.', 'success');
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function viewRoomDetails(roomId, roomPass) {
+            if (!roomId || !roomPass) {
+                SwalDark.fire({
+                    icon: 'info',
+                    title: 'Room Details Pending',
+                    text: 'Room ID & Password will be published 10 to 15 minutes before the match starts.'
+                });
+            } else {
+                SwalDark.fire({
+                    title: 'Room ID & Password',
+                    html: `
+                        <div class="bg-dark p-3 rounded text-start border border-secondary mb-2">
+                            <div class="mb-2"><strong>Room ID:</strong> <span class="text-info">${roomId}</span></div>
+                            <div><strong>Password:</strong> <span class="text-warning">${roomPass}</span></div>
+                        </div>
+                    `,
+                    confirmButtonText: 'Got It'
+                });
+            }
+        }
+
+        function loadMyJoinedMatches() {
+            db.ref('matches').on('value', (snap) => {
+                const container = document.getElementById('myMatchesList');
+                container.innerHTML = '';
+                let joinedFound = false;
+
+                if (snap.exists()) {
+                    snap.forEach((child) => {
+                        const m = child.val();
+                        const mKey = child.key;
+                        if (m.joinedUsers && m.joinedUsers[currentUserCleanEmail]) {
+                            joinedFound = true;
+                            renderMatchCard(container, mKey, m);
+                        }
+                    });
+                }
+
+                if (!joinedFound) {
+                    container.innerHTML = '<p class="text-muted text-center">You have not joined any matches yet.</p>';
+                }
+            });
+        }
+
+        // --- DEPOSIT SYSTEM ---
         function selectGateway(method) {
             selectedMethod = method;
             document.querySelectorAll('.gateway-card').forEach(c => c.classList.remove('active'));
@@ -375,10 +605,8 @@
             const step5 = document.getElementById('step5');
             const displayNum = document.getElementById('displayPaymentNum');
 
-            // Set Payment Number
             displayNum.innerText = paymentSettings[selectedMethod] || 'Not Set';
 
-            // Auto Mode vs Manual Mode Adjustments (Image 2 vs Image 3)
             if (isAutoMode) {
                 amountContainer.style.display = 'none';
                 step5.innerText = 'এখন উপরের বক্সে আপনার Transaction ID দিন আর নিচের VERIFY বাটন এ ক্লিক করুন।';
@@ -387,8 +615,6 @@
                 step5.innerText = 'এখন উপরের বক্সে আপনার Transaction ID এবং Amount দিন আর নিচের VERIFY বাটন এ ক্লিক করুন।';
             }
 
-            // Method specific instructions
-            const methodNameUpper = selectedMethod.toUpperCase();
             if (selectedMethod === 'bkash') {
                 step1.innerText = '*247# ডায়াল করে আপনার BKASH মোবাইল মেনুতে যান অথবা BKASH অ্যাপ এ যান।';
                 step4.innerText = 'নিশ্চিত করতে আপনার BKASH মোবাইল মেনু পিন লিখুন।';
@@ -404,13 +630,7 @@
         function copyNumber() {
             const num = document.getElementById('displayPaymentNum').innerText;
             navigator.clipboard.writeText(num).then(() => {
-                SwalDark.fire({
-                    icon: 'success',
-                    title: 'Copied!',
-                    text: 'Number copied to clipboard',
-                    timer: 1200,
-                    showConfirmButton: false
-                });
+                SwalDark.fire({ icon: 'success', title: 'Copied!', timer: 1200, showConfirmButton: false });
             });
         }
 
@@ -429,7 +649,6 @@
             }
 
             if (isAutoMode) {
-                // Auto Mode Verification via SMS Transactions
                 db.ref(`sms_transactions/${trxId}`).once('value', (snap) => {
                     if (snap.exists()) {
                         const smsData = snap.val();
@@ -438,7 +657,6 @@
                                 SwalDark.fire('Error', 'এই ট্রানজেকশন আইডিটি ইতিমধ্যে ব্যবহার করা হয়েছে!', 'error');
                             } else {
                                 const addAmount = parseFloat(smsData.amount) || 0;
-                                // Credit User
                                 db.ref(`users/${currentUserCleanEmail}/wallet`).transaction((current) => {
                                     return (current || 0) + addAmount;
                                 }).then(() => {
@@ -454,12 +672,10 @@
                             }
                         });
                     } else {
-                        // Fallback to manual request
                         submitManualRequest(trxId, 0);
                     }
                 });
             } else {
-                // Manual Mode Submission
                 submitManualRequest(trxId, parseFloat(amountVal));
             }
         }
@@ -477,28 +693,6 @@
                 SwalDark.fire('Submitted!', 'আপনার ডিপোজিট রিকোয়েস্ট জমা হয়েছে। কিছুক্ষণের মধ্যে ভেরিফাই করা হবে।', 'success');
                 document.getElementById('trxIdInput').value = '';
                 document.getElementById('amountInput').value = '';
-            });
-        }
-
-        function loadCategories() {
-            db.ref('match_categories').on('value', (snap) => {
-                const container = document.getElementById('homeCategories');
-                container.innerHTML = '';
-                if (!snap.exists()) {
-                    container.innerHTML = '<p class="text-muted text-center">No active categories available.</p>';
-                    return;
-                }
-                snap.forEach((child) => {
-                    const cat = child.val();
-                    container.innerHTML += `
-                        <div class="col-6 col-md-4">
-                            <div class="card p-2 text-center" style="background:#1e293b; border:1px solid #334155;">
-                                <img src="${cat.image || 'https://via.placeholder.com/150'}" class="img-fluid rounded mb-2" style="height:100px; object-fit:cover;">
-                                <h6 class="fw-bold text-white mb-0">${cat.title}</h6>
-                            </div>
-                        </div>
-                    `;
-                });
             });
         }
     </script>
