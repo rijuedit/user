@@ -224,7 +224,7 @@
         <!-- Tab 1: Home / Tournament Categories & Matches -->
         <div id="tab-home" class="tab-content">
             
-            <!-- Category View -->
+            <!-- Category View (Main Grid) -->
             <div id="userCategoryView">
                 <h6 class="text-light mb-3 fw-bold"><i class="fas fa-fire me-2 text-warning"></i>Select Game Category</h6>
                 <div id="homeCategories" class="row g-3"></div>
@@ -392,7 +392,12 @@
             document.getElementById('tab-' + tab).classList.remove('d-none');
             document.getElementById('bnav-' + tab).classList.add('active');
 
-            if (tab === 'mymatches') loadMyJoinedMatches();
+            if (tab === 'home') {
+                // 'Matches' বাটনে ক্লিক করলে ক্যাটাগরি পেজে নিয়ে যাবে
+                showUserCategories();
+            } else if (tab === 'mymatches') {
+                loadMyJoinedMatches();
+            }
         }
 
         function loadCategories() {
@@ -427,7 +432,7 @@
                 const container = document.getElementById('userMatchesList');
                 container.innerHTML = '';
                 if (!snap.exists()) {
-                    container.innerHTML = '<p class="text-muted text-center">No matches available in this category.</p>';
+                    container.innerHTML = '<p class="text-muted text-center py-4">No matches available in this category.</p>';
                     return;
                 }
                 snap.forEach((child) => {
@@ -528,7 +533,6 @@
                 if (res.isConfirmed) {
                     const { gameName, gameUid } = res.value;
 
-                    // Deduct balance and join match
                     db.ref(`users/${currentUserCleanEmail}/wallet`).transaction((current) => {
                         return (current || 0) - entryFee;
                     }).then((result) => {
@@ -585,7 +589,7 @@
                 }
 
                 if (!joinedFound) {
-                    container.innerHTML = '<p class="text-muted text-center">You have not joined any matches yet.</p>';
+                    container.innerHTML = '<p class="text-muted text-center py-4">You have not joined any matches yet.</p>';
                 }
             });
         }
