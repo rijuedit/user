@@ -75,13 +75,20 @@
             color: #ffa801;
         }
 
-        /* Swiper Banner */
+        /* Swiper Banner with Skeleton Placeholder */
         .swiper {
             width: 90%;
             height: 165px;
             margin: 15px auto;
             border-radius: 16px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            background: #eef2f5;
+        }
+
+        .swiper-slide {
+            background: #eef2f5;
+            border-radius: 16px;
+            overflow: hidden;
         }
 
         .swiper-slide img {
@@ -89,6 +96,8 @@
             height: 100%;
             object-fit: cover;
             border-radius: 16px;
+            display: block;
+            background: #eef2f5;
         }
 
         /* Marquee Notice Ticker */
@@ -102,6 +111,7 @@
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             border: 1px solid #f0edf9;
+            box-sizing: border-box;
         }
 
         .notice-badge {
@@ -122,7 +132,7 @@
             font-weight: 500;
         }
 
-        /* Categories */
+        /* Categories Section */
         .section-title {
             padding: 10px 20px 12px 20px;
             font-size: 1.05rem;
@@ -149,18 +159,32 @@
             cursor: pointer;
             transition: transform 0.2s;
             border: 1px solid #f5f3ff;
+            box-sizing: border-box;
         }
 
         .category-card:active {
             transform: scale(0.96);
         }
 
-        .category-card img {
+        /* Fast Image Box Placeholder */
+        .cat-img-box {
             width: 100%;
             aspect-ratio: 1/1;
+            border-radius: 12px;
+            background: #eef2f5;
+            overflow: hidden;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cat-img-box img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             border-radius: 12px;
-            margin-bottom: 10px;
+            transition: opacity 0.3s ease;
         }
 
         .category-card span {
@@ -206,6 +230,18 @@
             background: var(--pill-active);
             color: var(--primary);
         }
+
+        /* Shimmer Animation for Skeleton Loading */
+        .shimmer {
+            background: linear-gradient(90deg, #f0f2f5 25%, #e6e8ec 50%, #f0f2f5 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body>
@@ -224,7 +260,7 @@
     <!-- Swiper Banner Slider -->
     <div class="swiper">
         <div class="swiper-wrapper" id="bannerList">
-            <!-- Dynamic Banners -->
+            <div class="swiper-slide shimmer"></div>
         </div>
         <div class="swiper-pagination"></div>
     </div>
@@ -238,7 +274,15 @@
     <div class="section-title">Games Category</div>
 
     <div class="category-grid" id="categoryList">
-        <!-- Dynamic Category Cards -->
+        <!-- Skeleton Loaders before DB fetches -->
+        <div class="category-card">
+            <div class="cat-img-box shimmer"></div>
+            <span style="color:#ccc;">Loading...</span>
+        </div>
+        <div class="category-card">
+            <div class="cat-img-box shimmer"></div>
+            <span style="color:#ccc;">Loading...</span>
+        </div>
     </div>
 
     <!-- Bottom Navigation -->
@@ -262,6 +306,8 @@
     </nav>
 
     <script>
+        let homeSwiper = null;
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 loadUserData(user.email);
@@ -281,7 +327,7 @@
         }
 
         function loadAppContent() {
-            // 1. Fetch Notice live from appSettings
+            // 1. Fetch Notice live
             db.ref('appSettings/notice').on('value', snap => {
                 const noticeVal = snap.val();
                 if (noticeVal) {
@@ -293,19 +339,26 @@
             db.ref('banners').on('value', snap => {
                 const wrapper = document.getElementById('bannerList');
                 wrapper.innerHTML = '';
+                
                 if (snap.exists()) {
                     snap.forEach(child => {
                         const b = child.val();
                         wrapper.innerHTML += `
                             <div class="swiper-slide">
-                                <img src="${b.image}" onclick="if('${b.link}') window.open('${b.link}', '_blank')">
+                                <img src="${b.image}" decoding="async" loading="eager" onclick="if('${b.link}') window.open('${b.link}', '_blank')">
                             </div>
                         `;
                     });
-                    new Swiper('.swiper', {
+
+                    // Destroy old instance to avoid Swiper lock/freeze
+                    if (homeSwiper) homeSwiper.destroy(true, true);
+                    
+                    homeSwiper = new Swiper('.swiper', {
                         pagination: { el: '.swiper-pagination', clickable: true },
-                        autoplay: { delay: 3000, disableOnInteraction: false },
-                        loop: true
+                        autoplay: { delay: 3500, disableOnInteraction: false },
+                        loop: true,
+                        observer: true,
+                        observeParents: true
                     });
                 }
             });
@@ -314,12 +367,19 @@
             db.ref('match_categories').on('value', snap => {
                 const list = document.getElementById('categoryList');
                 list.innerHTML = '';
+                
                 if (snap.exists()) {
                     snap.forEach(child => {
                         const cat = child.val();
                         list.innerHTML += `
                             <div class="category-card" onclick="location.href='matches.html?cat=${child.key}'">
-                                <img src="${cat.image || 'https://cdn-icons-png.flaticon.com/512/3408/3408506.png'}" alt="${cat.title}">
+                                <div class="cat-img-box">
+                                    <img src="${cat.image || 'https://cdn-icons-png.flaticon.com/512/3408/3408506.png'}" 
+                                         decoding="async" 
+                                         loading="eager" 
+                                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/3408/3408506.png'"
+                                         alt="${cat.title}">
+                                </div>
                                 <span>${cat.title}</span>
                             </div>
                         `;
