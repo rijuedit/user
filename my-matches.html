@@ -192,13 +192,13 @@
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const match = child.val();
-                        // Check if user joined and match is not marked as completed
                         if (match.joinedUsers && match.joinedUsers[userKey] && match.status !== 'completed') {
                             hasMatches = true;
                             
                             const roomId = match.roomId || 'Pending...';
                             const roomPass = match.roomPassword || 'Pending...';
                             
+                            // Replace special characters with BDT to prevent GitHub errors
                             container.innerHTML += `
                                 <div class="match-card">
                                     <div class="match-header">
@@ -206,8 +206,8 @@
                                         <div class="match-time"><i class="far fa-clock"></i> ${match.matchDate} | ${match.matchTime}</div>
                                     </div>
                                     <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; color:#57606f;">
-                                        <div>Win Prize: ৳${match.winPrize}</div>
-                                        <div>Per Kill: ৳${match.perKill}</div>
+                                        <div>Win Prize: BDT ${match.winPrize}</div>
+                                        <div>Per Kill: BDT ${match.perKill}</div>
                                     </div>
                                     <div class="room-box">
                                         <div class="room-row">
