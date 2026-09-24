@@ -460,9 +460,9 @@
                 inputsHtml += `
                     <div style="text-align: left; margin-bottom: 12px;">
                         <label style="font-size: 0.8rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">
-                            Player ${i} Game Name / ID
+                            Player ${i} Game Nickname (Not UID)
                         </label>
-                        <input type="text" id="player_input_${i}" class="swal2-input" placeholder="e.g. FreeFireUID_${i}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 10px; font-size: 0.9rem;">
+                        <input type="text" id="player_input_${i}" class="swal2-input" placeholder="Enter Game Nickname here..." style="width: 100%; box-sizing: border-box; margin: 0; padding: 10px; font-size: 0.9rem;">
                     </div>
                 `;
             }
@@ -484,7 +484,7 @@
                     for (let i = 1; i <= numPlayers; i++) {
                         const val = document.getElementById(`player_input_${i}`).value.trim();
                         if (!val) {
-                            Swal.showValidationMessage(`Please enter Player ${i} Game Name / ID`);
+                            Swal.showValidationMessage(`Please enter Player ${i} Game Nickname`);
                             return false;
                         }
                         players.push(val);
