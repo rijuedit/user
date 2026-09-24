@@ -9,28 +9,38 @@ const firebaseConfig = {
     databaseURL: "https://oxi-esports-default-rtdb.firebaseio.com"
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
+// Initialize Firebase safely
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-const auth = firebase.auth();
-const db = firebase.database();
+const auth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
+const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
 
-// Set persistence to LOCAL so users stay logged in for WebView APK
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+// Enable Local Auth Persistence for APK WebView
+if (auth && firebase.auth.Auth) {
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(err) {
+        console.log("Auth persistence setup:", err);
+    });
+}
 
 // Global Helper: Convert Email to Firebase Key
 function emailToKey(email) {
     return email ? email.replace(/\./g, ',') : '';
 }
 
-// Global SweetAlert Theme for User App
-const SwalLight = Swal.mixin({
-    customClass: {
-        popup: 'swal-light-popup',
-        title: 'swal-light-title',
-        confirmButton: 'swal-light-confirm'
-    },
-    buttonsStyling: true
-});
+// Safe SwalLight wrapper (Prevents "Swal is undefined" build error)
+const SwalLight = {
+    fire: function(title, text, icon) {
+        if (typeof Swal !== 'undefined') {
+            return Swal.fire({
+                title: title || '',
+                text: text || '',
+                icon: icon || 'info',
+                confirmButtonColor: '#3d88cd'
+            });
+        } else {
+            console.log(title, text);
+        }
+    }
+};
