@@ -1,0 +1,239 @@
+<!-- User/my-matches.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>My Matches - OXI E-Sports</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+    <style>
+        :root {
+            --bg-color: #fbf9ff;
+            --primary: #6c5ce7;
+            --pill-active: #ece8ff;
+            --text-dark: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            padding-bottom: 85px;
+        }
+
+        /* Top Header */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 20px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #1e272e;
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        /* Match Card */
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #f0edf9;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f2f6;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .match-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .match-time {
+            font-size: 0.8rem;
+            color: #747d8c;
+            font-weight: 600;
+        }
+
+        /* Room Details Box */
+        .room-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px dashed #dcdde1;
+        }
+
+        .room-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .room-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .room-label {
+            font-weight: 700;
+            color: #2f3542;
+        }
+
+        .room-value {
+            font-weight: 800;
+            color: #e84118;
+            user-select: all;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px 20px;
+            color: #a4b0be;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dfe4ea;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.04);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #a4b0be;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+
+        .nav-item i { font-size: 1.25rem; margin-bottom: 4px; }
+        .nav-item.active { background: var(--pill-active); color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        My Matches
+    </div>
+
+    <div class="container" id="matchesContainer">
+        <div class="no-data">
+            <i class="fas fa-spinner fa-spin"></i><br>Loading your matches...
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-gamepad"></i><span>Play</span></a>
+        <a href="my-matches.html" class="nav-item active"><i class="fas fa-list-ul"></i><span>My Matches</span></a>
+        <a href="results.html" class="nav-item"><i class="fas fa-poll"></i><span>Results</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script>
+        let currentUserEmail = '';
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUserEmail = user.email;
+                loadMyMatches();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function loadMyMatches() {
+            const userKey = emailToKey(currentUserEmail);
+            
+            db.ref('matches').on('value', snapshot => {
+                const container = document.getElementById('matchesContainer');
+                container.innerHTML = '';
+                let hasMatches = false;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const match = child.val();
+                        // Check if user joined and match is not marked as completed
+                        if (match.joinedUsers && match.joinedUsers[userKey] && match.status !== 'completed') {
+                            hasMatches = true;
+                            
+                            const roomId = match.roomId || 'Pending...';
+                            const roomPass = match.roomPassword || 'Pending...';
+                            
+                            container.innerHTML += `
+                                <div class="match-card">
+                                    <div class="match-header">
+                                        <div class="match-title">${match.title}</div>
+                                        <div class="match-time"><i class="far fa-clock"></i> ${match.matchDate} | ${match.matchTime}</div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; color:#57606f;">
+                                        <div>Win Prize: ৳${match.winPrize}</div>
+                                        <div>Per Kill: ৳${match.perKill}</div>
+                                    </div>
+                                    <div class="room-box">
+                                        <div class="room-row">
+                                            <span class="room-label">Room ID:</span>
+                                            <span class="room-value">${roomId}</span>
+                                        </div>
+                                        <div class="room-row">
+                                            <span class="room-label">Password:</span>
+                                            <span class="room-value">${roomPass}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+
+                if (!hasMatches) {
+                    container.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-ghost"></i><br>You haven't joined any upcoming matches.
+                        </div>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
