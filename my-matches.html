@@ -5,235 +5,436 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My Matches - OXI E-Sports</title>
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Config -->
     <script src="config.js"></script>
     <style>
         :root {
             --bg-color: #fbf9ff;
             --primary: #6c5ce7;
-            --pill-active: #ece8ff;
             --text-dark: #2d3436;
+            --success: #2ed573;
+            --warning: #ffa801;
+            --danger: #ff4757;
+            --gray: #a4b0be;
         }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             background-color: var(--bg-color);
             color: var(--text-dark);
-            padding-bottom: 85px;
+            padding-bottom: 90px;
         }
-
-        /* Top Header */
+        
+        /* Header */
         .top-bar {
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 18px 20px;
+            align-items: center;
+            padding: 16px 20px;
             background: white;
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+        .page-title { font-size: 1.15rem; font-weight: 800; color: #1e272e; }
+
+        /* Tabs Container */
+        .tabs-container {
+            display: flex;
+            background: white;
+            padding: 10px 20px;
+            gap: 15px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #1e272e;
+            position: sticky;
+            top: 56px;
+            z-index: 99;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #f1f2f6;
+            color: #636e72;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
         }
 
-        .container {
-            padding: 15px;
-        }
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
 
         /* Match Card */
         .match-card {
             background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
             border: 1px solid #f0edf9;
+            position: relative;
         }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #f1f2f6;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-
-        .match-title {
-            font-size: 1.05rem;
+        .match-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .match-title { font-size: 1.05rem; font-weight: 800; color: #2d3436; }
+        .match-type-badge {
+            background: rgba(46, 213, 115, 0.15);
+            color: var(--success);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
             font-weight: 800;
-            color: var(--primary);
         }
-
-        .match-time {
+        .match-meta {
             font-size: 0.8rem;
-            color: #747d8c;
+            color: #636e72;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
             font-weight: 600;
         }
 
-        /* Room Details Box */
-        .room-box {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 10px;
-            border: 1px dashed #dcdde1;
+        /* Timer & Status Box */
+        .timer-box {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            border: 1px solid #ffeeba;
+        }
+        .timer-box.live-now {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            animation: pulseLive 1.5s infinite;
+        }
+        @keyframes pulseLive {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 65, 108, 0); }
+        }
+        .history-badge {
+            background: #f1f2f6;
+            color: #747d8c;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            border: 1px dashed #ced6e0;
         }
 
-        .room-row {
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .stat-label { font-size: 0.68rem; color: #b2bec3; font-weight: 800; margin-bottom: 2px; }
+        .stat-val { font-size: 0.9rem; font-weight: 800; }
+        .text-success { color: var(--success); }
+        .text-primary { color: var(--primary); }
+        .text-warning { color: #e67e22; }
+
+        .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .room-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .room-label {
-            font-weight: 700;
-            color: #2f3542;
-        }
-
-        .room-value {
-            font-weight: 800;
-            color: #e84118;
-            user-select: all;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 50px 20px;
-            color: #a4b0be;
-            font-size: 1rem;
+            font-size: 0.82rem;
+            color: #636e72;
+            margin-bottom: 12px;
             font-weight: 600;
         }
-
-        .no-data i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #dfe4ea;
+        .players-box {
+            background: #f0edf9;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 0.82rem;
         }
+        .players-box b { color: var(--primary); }
+        
+        .room-box {
+            background: #e8f8f5;
+            border: 1px dashed #1abc9c;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .room-box div { margin-bottom: 4px; }
+        .room-box b { color: #16a085; }
+
+        .no-matches { text-align: center; padding: 50px 20px; color: #a4b0be; font-size: 0.95rem; font-weight: 600; }
 
         /* Bottom Nav */
         .bottom-nav {
             position: fixed;
-            bottom: 0; left: 0; right: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: white;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -3px 15px rgba(0,0,0,0.04);
+            padding: 10px 5px 12px;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.06);
             z-index: 1000;
         }
-
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-decoration: none;
-            color: #a4b0be;
+            color: #b2bec3;
             font-size: 0.72rem;
             font-weight: 600;
-            padding: 6px 16px;
+            padding: 6px 14px;
             border-radius: 20px;
         }
-
-        .nav-item i { font-size: 1.25rem; margin-bottom: 4px; }
-        .nav-item.active { background: var(--pill-active); color: var(--primary); }
+        .nav-item.active { color: var(--primary); background: rgba(108, 92, 231, 0.1); }
+        .nav-item i { font-size: 1.15rem; margin-bottom: 3px; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        My Matches
+        <div class="page-title">My Matches</div>
     </div>
 
-    <div class="container" id="matchesContainer">
-        <div class="no-data">
-            <i class="fas fa-spinner fa-spin"></i><br>Loading your matches...
+    <!-- TABS -->
+    <div class="tabs-container">
+        <button class="tab-btn active" id="tab-upcoming" onclick="switchTab('upcoming')">Upcoming / Live</button>
+        <button class="tab-btn" id="tab-history" onclick="switchTab('history')">History</button>
+    </div>
+
+    <!-- MATCHES CONTAINER -->
+    <div class="container" id="myMatchesContainer">
+        <div class="no-matches">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary); margin-bottom: 15px;"></i><br>
+            Loading your matches...
         </div>
     </div>
 
+    <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
         <a href="home.html" class="nav-item"><i class="fas fa-gamepad"></i><span>Play</span></a>
-        <a href="my-matches.html" class="nav-item active"><i class="fas fa-list-ul"></i><span>My Matches</span></a>
+        <a href="my-matches.html" class="nav-item active"><i class="fas fa-trophy"></i><span>My Matches</span></a>
         <a href="results.html" class="nav-item"><i class="fas fa-poll"></i><span>Results</span></a>
         <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </nav>
 
     <script>
-        let currentUserEmail = '';
+        let currentUser = null;
+        let allJoinedMatches = [];
+        let currentTab = 'upcoming'; // Default Tab
 
         auth.onAuthStateChanged(user => {
             if (user) {
-                currentUserEmail = user.email;
-                loadMyMatches();
+                currentUser = user;
+                fetchMyMatches();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
-        function loadMyMatches() {
-            const userKey = emailToKey(currentUserEmail);
-            
-            db.ref('matches').on('value', snapshot => {
-                const container = document.getElementById('matchesContainer');
-                container.innerHTML = '';
-                let hasMatches = false;
+        // Tab Switcher
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.getElementById('tab-upcoming').classList.remove('active');
+            document.getElementById('tab-history').classList.remove('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            renderMatches();
+        }
 
+        // Email Key Converter fallback
+        function getEmailKey(email) {
+            return email.replace(/\./g, ',');
+        }
+
+        function fetchMyMatches() {
+            const userKey = getEmailKey(currentUser.email);
+
+            db.ref('matches').on('value', snapshot => {
+                allJoinedMatches = [];
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
-                        const match = child.val();
-                        if (match.joinedUsers && match.joinedUsers[userKey] && match.status !== 'completed') {
-                            hasMatches = true;
-                            
-                            const roomId = match.roomId || 'Pending...';
-                            const roomPass = match.roomPassword || 'Pending...';
-                            
-                            // Replace special characters with BDT to prevent GitHub errors
-                            container.innerHTML += `
-                                <div class="match-card">
-                                    <div class="match-header">
-                                        <div class="match-title">${match.title}</div>
-                                        <div class="match-time"><i class="far fa-clock"></i> ${match.matchDate} | ${match.matchTime}</div>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; color:#57606f;">
-                                        <div>Win Prize: BDT ${match.winPrize}</div>
-                                        <div>Per Kill: BDT ${match.perKill}</div>
-                                    </div>
-                                    <div class="room-box">
-                                        <div class="room-row">
-                                            <span class="room-label">Room ID:</span>
-                                            <span class="room-value">${roomId}</span>
-                                        </div>
-                                        <div class="room-row">
-                                            <span class="room-label">Password:</span>
-                                            <span class="room-value">${roomPass}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                        const m = child.val();
+                        // If user joined this match
+                        if (m && m.joinedUsers && m.joinedUsers[userKey]) {
+                            allJoinedMatches.push({ id: child.key, ...m, myJoin: m.joinedUsers[userKey] });
                         }
                     });
                 }
-
-                if (!hasMatches) {
-                    container.innerHTML = `
-                        <div class="no-data">
-                            <i class="fas fa-ghost"></i><br>You haven't joined any upcoming matches.
-                        </div>
-                    `;
-                }
+                renderMatches();
             });
         }
+
+        function renderMatches() {
+            const container = document.getElementById('myMatchesContainer');
+            container.innerHTML = '';
+            const now = new Date().getTime();
+
+            // Filter Matches based on Time (History vs Upcoming)
+            const filteredMatches = allJoinedMatches.filter(m => {
+                const targetDateStr = (m.rawDate && m.rawTime) ? `${m.rawDate}T${m.rawTime}:00` : null;
+                let isHistoryMatch = false;
+
+                if (targetDateStr) {
+                    const targetDate = new Date(targetDateStr).getTime();
+                    // If the match time is passed by 3 hours, consider it as History
+                    isHistoryMatch = (now - targetDate) > (3 * 60 * 60 * 1000); 
+                }
+                
+                // Admin mark as completed (fallback)
+                if (m.status === 'completed') isHistoryMatch = true;
+
+                return currentTab === 'history' ? isHistoryMatch : !isHistoryMatch;
+            });
+
+            // Sort logic: Newest at the top
+            filteredMatches.sort((a, b) => (b.myJoin.joinedAt || 0) - (a.myJoin.joinedAt || 0));
+
+            if (filteredMatches.length === 0) {
+                const msg = currentTab === 'upcoming' ? "You have no upcoming matches." : "No history found.";
+                container.innerHTML = `
+                    <div class="no-matches">
+                        <i class="fas fa-ghost fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i><br>
+                        ${msg}<br>
+                        <a href="home.html" style="color: var(--primary); font-weight: 700; text-decoration: none; margin-top: 10px; display: inline-block;">Browse Matches →</a>
+                    </div>`;
+                return;
+            }
+
+            filteredMatches.forEach(m => {
+                const targetTime = (m.rawDate && m.rawTime) ? `${m.rawDate}T${m.rawTime}:00` : '';
+                const playersList = (m.myJoin.players || []).join(', ');
+                const hasRoom = m.roomId && m.roomPassword;
+
+                // Upcoming matches get Live Timer, History gets a Badge
+                const timerOrBadgeHtml = currentTab === 'upcoming' 
+                    ? `<div class="timer-box" data-time="${targetTime}">
+                           <i class="fas fa-hourglass-half"></i> <span class="countdown-text">Calculating time...</span>
+                       </div>`
+                    : `<div class="history-badge">
+                           <i class="fas fa-flag-checkered"></i> Match Ended
+                       </div>`;
+
+                // Show Room ID box only if available AND it's in the 'upcoming' tab
+                const roomHtml = (hasRoom && currentTab === 'upcoming') ? `
+                    <div class="room-box">
+                        <div><b><i class="fas fa-door-open"></i> Room ID:</b> ${m.roomId}</div>
+                        <div><b><i class="fas fa-key"></i> Password:</b> ${m.roomPassword}</div>
+                    </div>` : '';
+
+                container.innerHTML += `
+                    <div class="match-card">
+                        <div class="match-card-header">
+                            <div class="match-title">${m.title || 'Tournament Match'}</div>
+                            <div class="match-type-badge"><i class="fas fa-check"></i> JOINED</div>
+                        </div>
+
+                        <div class="match-meta">
+                            <span><i class="far fa-calendar-alt"></i> ${m.matchDate || 'TBA'}</span>
+                            <span><i class="far fa-clock"></i> ${m.matchTime || 'TBA'}</span>
+                        </div>
+
+                        ${timerOrBadgeHtml}
+
+                        <div class="stats-row">
+                            <div>
+                                <div class="stat-label">WIN PRIZE</div>
+                                <div class="stat-val text-success">BDT ${m.winPrize || 0}</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">PER KILL</div>
+                                <div class="stat-val text-primary">BDT ${m.perKill || 0}</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">ENTRY FEE</div>
+                                <div class="stat-val text-warning">BDT ${m.entryFee || 0}</div>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <span><b>Map:</b> ${m.map || 'Bermuda'}</span>
+                            <span><b>Type:</b> ${m.type || 'Solo'}</span>
+                        </div>
+
+                        <div class="players-box">
+                            <b><i class="fas fa-users"></i> Your Team:</b> ${playersList || 'N/A'}
+                        </div>
+
+                        ${roomHtml}
+                    </div>
+                `;
+            });
+        }
+
+        // Live Timer Logic (Only targets elements inside 'Upcoming' tab)
+        setInterval(() => {
+            const timers = document.querySelectorAll('.timer-box');
+            const now = new Date().getTime();
+
+            timers.forEach(box => {
+                const targetStr = box.getAttribute('data-time');
+                const textSpan = box.querySelector('.countdown-text');
+                if (!textSpan) return;
+
+                if (!targetStr) {
+                    textSpan.innerText = "Time TBA";
+                    return;
+                }
+
+                const targetDate = new Date(targetStr).getTime();
+                if (isNaN(targetDate)) return;
+
+                const distance = targetDate - now;
+
+                if (distance < 0) {
+                    box.classList.add('live-now');
+                    box.innerHTML = `<i class="fas fa-circle" style="font-size:0.6rem;"></i> <span class="countdown-text">LIVE NOW</span>`;
+                } else {
+                    box.classList.remove('live-now');
+                    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    let timeStr = "Starts in: ";
+                    if (d > 0) timeStr += d + "d ";
+                    timeStr += (h < 10 ? "0" + h : h) + "h ";
+                    timeStr += (m < 10 ? "0" + m : m) + "m ";
+                    timeStr += (s < 10 ? "0" + s : s) + "s";
+                    textSpan.innerText = timeStr;
+                }
+            });
+        }, 1000);
     </script>
 </body>
 </html>
