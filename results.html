@@ -1,0 +1,190 @@
+<!-- User/results.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Results - OXI E-Sports</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config.js"></script>
+    <style>
+        :root {
+            --bg-color: #fbf9ff;
+            --primary: #6c5ce7;
+            --pill-active: #ece8ff;
+            --text-dark: #2d3436;
+            --success: #2ed573;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            padding-bottom: 85px;
+        }
+
+        /* Top Header */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 20px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #1e272e;
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        /* Result Card */
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #f0edf9;
+        }
+
+        .match-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #2f3542;
+            margin-bottom: 5px;
+        }
+
+        .match-time {
+            font-size: 0.8rem;
+            color: #747d8c;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .result-badge {
+            display: inline-block;
+            background: rgba(46, 213, 115, 0.1);
+            color: var(--success);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px 20px;
+            color: #a4b0be;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dfe4ea;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.04);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #a4b0be;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+
+        .nav-item i { font-size: 1.25rem; margin-bottom: 4px; }
+        .nav-item.active { background: var(--pill-active); color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        Match Results
+    </div>
+
+    <div class="container" id="resultsContainer">
+        <div class="no-data">
+            <i class="fas fa-spinner fa-spin"></i><br>Loading match results...
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-gamepad"></i><span>Play</span></a>
+        <a href="my-matches.html" class="nav-item"><i class="fas fa-list-ul"></i><span>My Matches</span></a>
+        <a href="results.html" class="nav-item active"><i class="fas fa-poll"></i><span>Results</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script>
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadResults();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function loadResults() {
+            db.ref('matches').on('value', snapshot => {
+                const container = document.getElementById('resultsContainer');
+                container.innerHTML = '';
+                let hasResults = false;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const match = child.val();
+                        // Only show matches marked as 'completed'
+                        if (match.status === 'completed') {
+                            hasResults = true;
+                            
+                            container.innerHTML += `
+                                <div class="result-card">
+                                    <div class="match-title">${match.title}</div>
+                                    <div class="match-time"><i class="far fa-clock"></i> ${match.matchDate}</div>
+                                    <div class="result-badge"><i class="fas fa-check-circle"></i> Match Completed</div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+
+                if (!hasResults) {
+                    container.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-box-open"></i><br>No match results published yet.
+                        </div>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
