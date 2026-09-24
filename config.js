@@ -1,4 +1,4 @@
-// Firebase Configuration for User App (APK Pure Ready)
+// User/config.js
 const firebaseConfig = {
     apiKey: "AIzaSyAkZkqcyP3P6QnbHT-wfxeygxgY9IoKBAU",
     authDomain: "oxi-esports.firebaseapp.com",
@@ -13,35 +13,24 @@ const firebaseConfig = {
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
-const db = firebase.database();
-const auth = firebase.auth();
 
-// Enable Local Session Persistence for Android WebView APK
+const auth = firebase.auth();
+const db = firebase.database();
+
+// Set persistence to LOCAL so users stay logged in for WebView APK
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// SweetAlert2 Light Theme Popup (User Mobile App UI)
+// Global Helper: Convert Email to Firebase Key
+function emailToKey(email) {
+    return email ? email.replace(/\./g, ',') : '';
+}
+
+// Global SweetAlert Theme for User App
 const SwalLight = Swal.mixin({
     customClass: {
         popup: 'swal-light-popup',
         title: 'swal-light-title',
         confirmButton: 'swal-light-confirm'
     },
-    background: '#ffffff',
-    color: '#1a1a1a',
-    confirmButtonColor: '#b026ff',
-    cancelButtonColor: '#ff4d4d'
+    buttonsStyling: true
 });
-
-// Utility Functions
-function emailToKey(email) {
-    return email ? email.replace(/\./g, ',') : '';
-}
-
-// User Authentication Guard for WebView
-function checkUserAuth() {
-    auth.onAuthStateChanged(user => {
-        if (!user) {
-            window.location.href = "login.html";
-        }
-    });
-}
