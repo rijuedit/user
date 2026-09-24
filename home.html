@@ -8,224 +8,119 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <!-- Swiper JS for Banner Slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
     <script src="config.js"></script>
     <style>
-        :root {
-            --bg-color: #fbf9ff;
-            --primary: #6c5ce7;
-            --pill-active: #ece8ff;
-        }
         body {
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
-            background-color: var(--bg-color);
+            background-color: #fbf9ff;
             padding-bottom: 80px;
         }
 
-        /* Top App Bar */
+        /* Top Bar */
         .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: white;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
-        .app-logo {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #333;
-        }
+        .app-logo { font-size: 1.2rem; font-weight: 900; color: #222; }
         .wallet-badge {
-            background: #f0f0f0;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: #f0f0f0; padding: 6px 16px;
+            border-radius: 20px; font-size: 0.9rem; font-weight: bold;
+            color: #333; cursor: pointer;
         }
 
         /* Banner Slider */
-        .swiper {
-            width: 90%;
-            height: 160px;
-            margin: 15px auto;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .swiper-slide img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .swiper { width: 90%; height: 160px; margin: 15px auto; border-radius: 15px; }
+        .swiper-slide img { width: 100%; height: 100%; object-fit: cover; border-radius: 15px; }
 
         /* Marquee Notice */
         .notice-container {
-            width: 90%;
-            margin: 10px auto;
-            background: #fff;
-            padding: 8px 15px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            width: 90%; margin: 10px auto; background: #fff;
+            padding: 8px 12px; border-radius: 8px; display: flex; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f0f0f0;
         }
         .notice-label {
-            background: #ff4757;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-right: 10px;
+            background: #ff4757; color: white; padding: 3px 10px;
+            border-radius: 5px; font-size: 0.75rem; font-weight: bold; margin-right: 10px;
         }
-        marquee {
-            font-size: 0.85rem;
-            color: #555;
-        }
+        marquee { font-size: 0.85rem; color: #666; }
 
-        /* Category Grid */
-        .section-title {
-            padding: 10px 20px;
-            font-weight: bold;
-            color: #444;
-        }
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            padding: 0 20px;
-        }
+        /* Categories */
+        .section-title { padding: 15px 20px 10px; font-weight: bold; color: #444; font-size: 1.05rem; }
+        .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 20px; }
         .category-card {
-            background: white;
-            aspect-ratio: 1/1;
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-            cursor: pointer;
-            transition: transform 0.2s;
+            background: white; border-radius: 12px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer;
         }
-        .category-card:active { transform: scale(0.95); }
-        .category-card img {
-            width: 70%;
-            height: 70%;
-            object-fit: contain;
-            margin-bottom: 8px;
-        }
-        .category-card span {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #333;
-        }
+        .category-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
+        .category-card span { font-size: 0.9rem; font-weight: bold; color: #333; text-align: center; }
 
-        /* Bottom Nav */
+        /* Bottom Nav (Exact Match) */
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            z-index: 1000;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; display: flex; justify-content: space-around;
+            padding: 12px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.03); z-index: 1000;
         }
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #888;
-            font-size: 0.7rem;
-            padding: 8px 15px;
-            border-radius: 20px;
+            text-decoration: none; color: #888; font-size: 0.85rem;
+            padding: 8px 20px; border-radius: 20px; font-weight: 500;
         }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
-        .nav-item.active {
-            background: var(--pill-active);
-            color: var(--primary);
-        }
+        .nav-item.active { background: #ece8ff; color: #8e7dff; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
         <div class="app-logo">OXI E-Sports</div>
-        <div class="wallet-badge" onclick="location.href='wallet.html'">
-            <i class="fas fa-coins text-warning"></i>
-            <span id="userBalance">0.00</span>
-        </div>
+        <div class="wallet-badge" onclick="location.href='wallet.html'" id="userBalance">0.00</div>
     </div>
 
     <!-- Banner Slider -->
     <div class="swiper">
-        <div class="swiper-wrapper" id="bannerList">
-            <!-- Dynamic Banners -->
-        </div>
-        <div class="swiper-pagination"></div>
+        <div class="swiper-wrapper" id="bannerList"></div>
     </div>
 
-    <!-- Marquee Notice -->
+    <!-- Notice -->
     <div class="notice-container">
         <div class="notice-label">Notice</div>
-        <marquee id="noticeText">Welcome to OXI E-Sports Tournament App! Join matches and win exciting prizes.</marquee>
+        <marquee id="noticeText">Loading notice...</marquee>
     </div>
 
     <div class="section-title">Games Category</div>
     <div class="category-grid" id="categoryList">
-        <!-- Dynamic Categories -->
+        <!-- Loaded from DB -->
     </div>
 
     <nav class="bottom-nav">
-        <a href="home.html" class="nav-item active">
-            <i class="fas fa-gamepad"></i>
-            <span>Play</span>
-        </a>
-        <a href="my-matches.html" class="nav-item">
-            <i class="fas fa-list-ul"></i>
-            <span>My Matches</span>
-        </a>
-        <a href="results.html" class="nav-item">
-            <i class="fas fa-poll"></i>
-            <span>Results</span>
-        </a>
-        <a href="profile.html" class="nav-item">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-        </a>
+        <a href="home.html" class="nav-item active">Play</a>
+        <a href="my-matches.html" class="nav-item">My Matches</a>
+        <a href="results.html" class="nav-item">Results</a>
+        <a href="profile.html" class="nav-item">Profile</a>
     </nav>
 
     <script>
-        // Check Auth
         auth.onAuthStateChanged(user => {
             if (user) {
-                loadUserData(user.email);
-                loadContent();
+                db.ref('users/' + emailToKey(user.email)).on('value', snap => {
+                    const data = snap.val();
+                    if(data) document.getElementById('userBalance').innerText = (data.wallet || 0).toFixed(2);
+                });
+                loadAppContent();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
-        function loadUserData(email) {
-            db.ref('users/' + emailToKey(email)).on('value', snap => {
-                const data = snap.val();
-                if(data) document.getElementById('userBalance').innerText = (data.wallet || 0).toFixed(2);
+        function loadAppContent() {
+            // Load Settings (Notice)
+            db.ref('appSettings/notice').on('value', snap => {
+                document.getElementById('noticeText').innerText = snap.val() || 'Welcome to OXI E-Sports!';
             });
-        }
 
-        function loadContent() {
             // Load Banners
             db.ref('banners').on('value', snap => {
                 const wrapper = document.getElementById('bannerList');
@@ -234,16 +129,7 @@
                     const b = child.val();
                     wrapper.innerHTML += `<div class="swiper-slide"><img src="${b.image}" onclick="window.open('${b.link}', '_blank')"></div>`;
                 });
-                new Swiper('.swiper', {
-                    pagination: { el: '.swiper-pagination' },
-                    autoplay: { delay: 3000 },
-                    loop: true
-                });
-            });
-
-            // Load Notice (Assuming a setting node exists, otherwise uses default)
-            db.ref('appSettings/notice').on('value', snap => {
-                if(snap.exists()) document.getElementById('noticeText').innerText = snap.val();
+                new Swiper('.swiper', { autoplay: { delay: 3000 }, loop: true });
             });
 
             // Load Categories
@@ -252,10 +138,9 @@
                 list.innerHTML = '';
                 snap.forEach(child => {
                     const cat = child.val();
-                    const catKey = child.key;
                     list.innerHTML += `
-                        <div class="category-card" onclick="location.href='matches.html?cat=${catKey}'">
-                            <img src="${cat.image || 'https://cdn-icons-png.flaticon.com/512/3408/3408506.png'}" alt="${cat.title}">
+                        <div class="category-card" onclick="location.href='matches.html?cat=${child.key}'">
+                            <img src="${cat.image}" alt="${cat.title}">
                             <span>${cat.title}</span>
                         </div>
                     `;
