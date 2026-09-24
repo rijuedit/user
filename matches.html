@@ -262,10 +262,11 @@
     <script>
         let currentUser = null;
         let userWallet = 0;
+        let matchesLoaded = false;
 
-        // Parse Category Key from URL
+        // Parse Category Key from URL (?cat=KEY)
         const urlParams = new URLSearchParams(window.location.search);
-        const categoryKey = urlParams.get('cat') || '';
+        const categoryKey = (urlParams.get('cat') || '').trim();
 
         // Auth Monitor
         auth.onAuthStateChanged(user => {
@@ -278,6 +279,21 @@
                 window.location.href = 'login.html';
             }
         });
+
+        // 5 Seconds Safeguard Timeout
+        setTimeout(() => {
+            if (!matchesLoaded) {
+                const container = document.getElementById('matchesContainer');
+                if (container && container.innerHTML.includes('Loading tournament matches')) {
+                    container.innerHTML = `
+                        <div class="no-matches">
+                            <i class="fas fa-ghost fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i><br>
+                            No active matches found in this category.
+                        </div>
+                    `;
+                }
+            }
+        }, 5000);
 
         // Load User Balance
         function loadUserData(email) {
@@ -300,105 +316,131 @@
             });
         }
 
-        // Load Matches List (Client-Side Filter to fix infinite loading!)
+        // Load Matches List with Error Catching
         function loadMatches() {
+            if (!currentUser) return;
             const userKey = emailToKey(currentUser.email);
             const container = document.getElementById('matchesContainer');
 
             db.ref('matches').on('value', snapshot => {
+                matchesLoaded = true;
                 container.innerHTML = '';
                 let matchFound = false;
 
-                if (snapshot.exists()) {
-                    snapshot.forEach(child => {
-                        const m = child.val();
-                        const matchKey = child.key;
+                try {
+                    if (snapshot.exists()) {
+                        snapshot.forEach(child => {
+                            const m = child.val();
+                            if (!m) return;
+                            const matchKey = child.key;
 
-                        // CLIENT-SIDE FILTERING - Prevents Firebase Index Error Freeze!
-                        if (!categoryKey || m.categoryKey === categoryKey) {
-                            matchFound = true;
+                            // Client-side category key filter
+                            const mCat = (m.categoryKey || '').trim();
+                            if (!categoryKey || mCat === categoryKey) {
+                                matchFound = true;
 
-                            const joinedUsers = m.joinedUsers || {};
-                            const joinedCount = Object.keys(joinedUsers).length;
-                            const maxSpots = m.totalSpots || 48;
-                            const isJoined = !!joinedUsers[userKey];
-                            const isFull = joinedCount >= maxSpots;
+                                const joinedUsers = m.joinedUsers || {};
+                                const joinedCount = Object.keys(joinedUsers).length;
+                                const maxSpots = parseInt(m.totalSpots) || 48;
+                                const isJoined = !!joinedUsers[userKey];
+                                const isFull = joinedCount >= maxSpots;
 
-                            const progressPct = Math.min(100, Math.round((joinedCount / maxSpots) * 100));
+                                const progressPct = Math.min(100, Math.round((joinedCount / maxSpots) * 100));
 
-                            container.innerHTML += `
-                                <div class="match-card">
-                                    <div class="match-card-header">
-                                        <div class="match-title">${m.title || 'Tournament Match'}</div>
-                                        <div class="match-type-badge">${m.type || 'Solo'}</div>
-                                    </div>
+                                const safeType = (m.type || 'Solo').replace(/'/g, "\\'");
+                                const entryFee = parseFloat(m.entryFee) || 0;
 
-                                    <div class="match-meta">
-                                        <span><i class="far fa-calendar-alt"></i> ${m.matchDate || 'TBA'}</span>
-                                        <span><i class="far fa-clock"></i> ${m.matchTime || 'TBA'}</span>
-                                    </div>
-
-                                    <div class="stats-row">
-                                        <div class="stat-pill">
-                                            <div class="stat-label">WIN PRIZE</div>
-                                            <div class="stat-val text-success">BDT ${m.winPrize || 0}</div>
+                                container.innerHTML += `
+                                    <div class="match-card">
+                                        <div class="match-card-header">
+                                            <div class="match-title">${m.title || 'Tournament Match'}</div>
+                                            <div class="match-type-badge">${m.type || 'Solo'}</div>
                                         </div>
-                                        <div class="stat-pill">
-                                            <div class="stat-label">PER KILL</div>
-                                            <div class="stat-val text-primary">BDT ${m.perKill || 0}</div>
+
+                                        <div class="match-meta">
+                                            <span><i class="far fa-calendar-alt"></i> ${m.matchDate || 'TBA'}</span>
+                                            <span><i class="far fa-clock"></i> ${m.matchTime || 'TBA'}</span>
                                         </div>
-                                        <div class="stat-pill">
-                                            <div class="stat-label">ENTRY FEE</div>
-                                            <div class="stat-val text-warning">BDT ${m.entryFee || 0}</div>
+
+                                        <div class="stats-row">
+                                            <div class="stat-pill">
+                                                <div class="stat-label">WIN PRIZE</div>
+                                                <div class="stat-val text-success">BDT ${m.winPrize || 0}</div>
+                                            </div>
+                                            <div class="stat-pill">
+                                                <div class="stat-label">PER KILL</div>
+                                                <div class="stat-val text-primary">BDT ${m.perKill || 0}</div>
+                                            </div>
+                                            <div class="stat-pill">
+                                                <div class="stat-label">ENTRY FEE</div>
+                                                <div class="stat-val text-warning">BDT ${m.entryFee || 0}</div>
+                                            </div>
                                         </div>
+
+                                        <div class="info-row">
+                                            <span><b>Map:</b> ${m.map || 'Bermuda'}</span>
+                                            <span><b>Version:</b> ${m.version || 'MOBILE'}</span>
+                                        </div>
+
+                                        <div class="spots-box">
+                                            <div class="spots-text">
+                                                <span>Spots Filled</span>
+                                                <span><b>${joinedCount}</b> / ${maxSpots}</span>
+                                            </div>
+                                            <div class="progress-bar-bg">
+                                                <div class="progress-bar-fill" style="width: ${progressPct}%;"></div>
+                                            </div>
+                                        </div>
+
+                                        ${isJoined ? `
+                                            <button class="btn-match btn-joined" disabled>
+                                                <i class="fas fa-check-circle"></i> JOINED
+                                            </button>
+                                        ` : isFull ? `
+                                            <button class="btn-match btn-full" disabled>
+                                                <i class="fas fa-times-circle"></i> MATCH FULL
+                                            </button>
+                                        ` : `
+                                            <button class="btn-match btn-join" onclick="handleJoinMatch('${matchKey}', '${safeType}', ${entryFee})">
+                                                JOIN NOW
+                                            </button>
+                                        `}
                                     </div>
+                                `;
+                            }
+                        });
+                    }
 
-                                    <div class="info-row">
-                                        <span><b>Map:</b> ${m.map || 'Bermuda'}</span>
-                                        <span><b>Version:</b> ${m.version || 'MOBILE'}</span>
-                                    </div>
-
-                                    <div class="spots-box">
-                                        <div class="spots-text">
-                                            <span>Spots Filled</span>
-                                            <span><b>${joinedCount}</b> / ${maxSpots}</span>
-                                        </div>
-                                        <div class="progress-bar-bg">
-                                            <div class="progress-bar-fill" style="width: ${progressPct}%;"></div>
-                                        </div>
-                                    </div>
-
-                                    ${isJoined ? `
-                                        <button class="btn-match btn-joined" disabled>
-                                            <i class="fas fa-check-circle"></i> JOINED
-                                        </button>
-                                    ` : isFull ? `
-                                        <button class="btn-match btn-full" disabled>
-                                            <i class="fas fa-times-circle"></i> MATCH FULL
-                                        </button>
-                                    ` : `
-                                        <button class="btn-match btn-join" onclick="handleJoinMatch('${matchKey}', '${m.type || 'Solo'}', ${m.entryFee || 0})">
-                                            JOIN NOW
-                                        </button>
-                                    `}
-                                </div>
-                            `;
-                        }
-                    });
-                }
-
-                if (!matchFound) {
+                    if (!matchFound) {
+                        container.innerHTML = `
+                            <div class="no-matches">
+                                <i class="fas fa-ghost fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i><br>
+                                No active matches found in this category.
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    console.error("Render Error:", err);
                     container.innerHTML = `
                         <div class="no-matches">
-                            <i class="fas fa-ghost fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i><br>
-                            No matches available in this category right now.
+                            <i class="fas fa-exclamation-triangle fa-2x" style="color: #ff4757; margin-bottom:10px;"></i><br>
+                            Error loading matches.
                         </div>
                     `;
                 }
+            }, error => {
+                matchesLoaded = true;
+                console.error("Database Error:", error);
+                container.innerHTML = `
+                    <div class="no-matches">
+                        <i class="fas fa-lock fa-2x" style="color: #ff4757; margin-bottom:10px;"></i><br>
+                        Database connection issue.
+                    </div>
+                `;
             });
         }
 
-        // Handle Join Match Modal (Dynamic Solo/Duo/Squad Player Name Fields)
+        // Handle Join Match Modal
         function handleJoinMatch(matchKey, matchType, entryFee) {
             if (userWallet < entryFee) {
                 SwalLight.fire({
@@ -462,12 +504,11 @@
             const userRef = db.ref('users/' + userKey);
             const joinedRef = db.ref(`matches/${matchKey}/joinedUsers/${userKey}`);
 
-            // Deduct Wallet Balance Atomically
             userRef.child('wallet').transaction(currentBal => {
                 if ((currentBal || 0) >= entryFee) {
                     return (currentBal || 0) - entryFee;
                 } else {
-                    return; // Abort
+                    return;
                 }
             }, (error, committed) => {
                 if (error) {
@@ -475,13 +516,11 @@
                 } else if (!committed) {
                     SwalLight.fire('Failed', 'Insufficient wallet balance.', 'error');
                 } else {
-                    // Save Joined User details in Match Node
                     joinedRef.set({
                         email: currentUser.email,
                         players: playersArr,
                         joinedAt: firebase.database.ServerValue.TIMESTAMP
                     }).then(() => {
-                        // Increment Matches Played counter for user profile
                         userRef.child('matchesPlayed').transaction(cnt => (cnt || 0) + 1);
 
                         SwalLight.fire({
